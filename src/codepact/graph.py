@@ -8,22 +8,36 @@ from pathlib import Path
 
 import networkx as nx  # type: ignore[import-untyped]
 
+from codepact.language import SOURCE_CODE_EXTENSIONS, detect_language
 from codepact.models import SourceFile
 
 
 class DependencyAnalyzer:
-    """Build a directed local dependency graph from Python and JS/TS imports."""
+    """Build a directed local dependency graph from common language imports."""
 
-    source_extensions = {
-        ".py",
-        ".js",
-        ".jsx",
-        ".ts",
-        ".tsx",
-        ".mjs",
-        ".cjs",
-    }
+    source_extensions = SOURCE_CODE_EXTENSIONS
     javascript_extensions = (".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs")
+    dotted_import_extensions = (".kt", ".kts", ".java", ".cs", ".swift", ".go", ".rs")
+    path_import_extensions = (
+        ".c",
+        ".cc",
+        ".cpp",
+        ".cs",
+        ".cxx",
+        ".dart",
+        ".go",
+        ".h",
+        ".hh",
+        ".hpp",
+        ".hxx",
+        ".java",
+        ".kt",
+        ".kts",
+        ".php",
+        ".rb",
+        ".rs",
+        ".swift",
+    )
 
     def analyze(self, files: list[SourceFile]) -> nx.DiGraph:
         """Populate imports and return a graph with edges importer -> dependency."""
@@ -43,11 +57,23 @@ class DependencyAnalyzer:
         return graph
 
     def extract_imports(self, source: SourceFile) -> set[str]:
-        suffix = source.path.suffix.lower()
-        if suffix == ".py":
+        language = self._language_for(source)
+        if language == "python":
             return self._extract_python_imports(source.text)
-        if suffix in self.javascript_extensions:
+        if language in {"javascript", "typescript"}:
             return self._extract_javascript_imports(source.text)
+        if language in {"java", "kotlin", "csharp", "swift", "go"}:
+            return self._extract_dotted_imports(source.text)
+        if language == "rust":
+            return self._extract_rust_imports(source.text)
+        if language in {"c", "cpp"}:
+            return self._extract_c_includes(source.text)
+        if language == "php":
+            return self._extract_php_imports(source.text)
+        if language == "ruby":
+            return self._extract_ruby_imports(source.text)
+        if language == "dart":
+            return self._extract_dart_imports(source.text)
         return set()
 
     def resolve_import(
@@ -93,10 +119,50 @@ class DependencyAnalyzer:
         imports.update(re.findall(r"""export\s+.+?\s+from\s+["']([^"']+)["']""", text))
         return imports
 
+    def _extract_dotted_imports(self, text: str) -> set[str]:
+        imports = set(re.findall(r"^\s*import\s+(?:static\s+)?([A-Za-z_][\w.]*)(?:\.\*)?", text, re.MULTILINE))
+        imports.update(re.findall(r"^\s*using\s+([A-Za-z_][\w.]*);", text, re.MULTILINE))
+        return imports
+
+    def _extract_rust_imports(self, text: str) -> set[str]:
+        imports = set(re.findall(r"^\s*use\s+([A-Za-z_][\w:]*)(?:::\*)?;", text, re.MULTILINE))
+        imports.update(re.findall(r"^\s*mod\s+([A-Za-z_]\w*)\s*;", text, re.MULTILINE))
+        return imports
+
+    def _extract_c_includes(self, text: str) -> set[str]:
+        return set(re.findall(r'^\s*#\s*include\s+"([^"]+)"', text, re.MULTILINE))
+
+    def _extract_php_imports(self, text: str) -> set[str]:
+        imports = set(re.findall(r"^\s*use\s+([A-Za-z_\\][\w\\]*);", text, re.MULTILINE))
+        imports.update(re.findall(r"""(?:require|include)(?:_once)?\s*\(?\s*["']([^"']+)["']""", text))
+        return imports
+
+    def _extract_ruby_imports(self, text: str) -> set[str]:
+        imports = set(re.findall(r"""^\s*require_relative\s+["']([^"']+)["']""", text, re.MULTILINE))
+        imports.update(re.findall(r"""^\s*require\s+["']([^"']+)["']""", text, re.MULTILINE))
+        return imports
+
+    def _extract_dart_imports(self, text: str) -> set[str]:
+        return set(re.findall(r"""^\s*(?:import|export|part)\s+["']([^"']+)["']""", text, re.MULTILINE))
+
     def _candidate_paths(self, import_name: str, source: SourceFile) -> list[str]:
-        if source.path.suffix.lower() == ".py":
+        language = self._language_for(source)
+        if language == "python":
             return self._python_candidate_paths(import_name, source)
-        return self._javascript_candidate_paths(import_name, source)
+        if language in {"javascript", "typescript"}:
+            return self._javascript_candidate_paths(import_name, source)
+        if language in {"java", "kotlin", "csharp", "swift", "go"} and "." in import_name:
+            return self._dotted_candidate_paths(import_name, self.dotted_import_extensions)
+        if language == "rust" and "::" in import_name:
+            return self._rust_candidate_paths(import_name, source)
+        if language == "php" and "\\" in import_name:
+            return self._dotted_candidate_paths(import_name.replace("\\", "."), (".php",))
+        return self._path_candidate_paths(import_name, source, self.path_import_extensions)
+
+    def _language_for(self, source: SourceFile) -> str:
+        if source.detected_language and source.detected_language != "unknown":
+            return source.detected_language
+        return detect_language(source.relative_path)
 
     def _python_candidate_paths(self, import_name: str, source: SourceFile) -> list[str]:
         if import_name.startswith("."):
@@ -124,6 +190,27 @@ class DependencyAnalyzer:
             self.javascript_extensions,
             include_index=True,
         )
+
+    def _dotted_candidate_paths(self, import_name: str, extensions: tuple[str, ...]) -> list[str]:
+        module_path = Path(import_name.replace(".", "/"))
+        return self._expand_candidate(module_path, extensions, include_index=False)
+
+    def _rust_candidate_paths(self, import_name: str, source: SourceFile) -> list[str]:
+        cleaned = re.sub(r"^(?:crate|self|super)::", "", import_name)
+        module_path = Path(source.relative_path).parent / cleaned.replace("::", "/")
+        return self._expand_candidate(module_path, (".rs",), include_index=False)
+
+    def _path_candidate_paths(
+        self,
+        import_name: str,
+        source: SourceFile,
+        extensions: tuple[str, ...],
+    ) -> list[str]:
+        if import_name.startswith("."):
+            module_path = Path(source.relative_path).parent / import_name
+        else:
+            module_path = Path(import_name)
+        return self._expand_candidate(module_path, extensions, include_index=True)
 
     def _expand_candidate(
         self,

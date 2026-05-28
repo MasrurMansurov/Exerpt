@@ -6,7 +6,7 @@ on:
   pull_request:
 
 jobs:
-  test:
+  python:
     name: Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     strategy:
@@ -37,3 +37,26 @@ jobs:
 
       - name: Run mypy
         run: python -m mypy src scripts
+
+  webapp:
+    name: Webapp build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: webapp/package-lock.json
+
+      - name: Install web dependencies
+        working-directory: webapp
+        run: npm ci
+
+      - name: Build webapp
+        working-directory: webapp
+        run: npm run build

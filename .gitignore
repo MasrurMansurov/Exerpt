@@ -13,3 +13,10 @@ dist/
 *.egg-info/
 
 codepact.md
+
+node_modules/
+.next/
+out/
+webapp/.next/
+webapp/node_modules/
+webapp/out/

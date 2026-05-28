@@ -7,6 +7,7 @@ from typing import Any
 
 from pathspec import PathSpec
 
+from codepact.language import detect_language, is_ignored_project_path
 from codepact.models import SourceFile
 
 
@@ -15,7 +16,9 @@ class ProjectScanner:
 
     ignored_dirs = {
         ".git",
+        ".gradle",
         ".hg",
+        ".idea",
         ".mypy_cache",
         ".nox",
         ".pytest_cache",
@@ -94,7 +97,14 @@ class ProjectScanner:
             if text is None:
                 continue
 
-            discovered.append(SourceFile(path=path, relative_path=relative_path, text=text))
+            discovered.append(
+                SourceFile(
+                    path=path,
+                    relative_path=relative_path,
+                    text=text,
+                    detected_language=detect_language(relative_path),
+                )
+            )
 
         return discovered
 
@@ -131,6 +141,8 @@ class ProjectScanner:
     def _is_ignored(self, relative_path: str, ignore_spec: PathSpec[Any]) -> bool:
         parts = set(Path(relative_path).parts)
         if parts.intersection(self.ignored_dirs):
+            return True
+        if is_ignored_project_path(relative_path):
             return True
         return ignore_spec.match_file(relative_path)
 

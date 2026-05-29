@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from codepact.graph import DependencyAnalyzer
-from codepact.models import Priority, SourceFile
-from codepact.ranker import SmartRanker
+from exerpt.graph import DependencyAnalyzer
+from exerpt.models import Priority, SourceFile
+from exerpt.ranker import SmartRanker
 
 
 def test_python_and_typescript_imports_build_dependency_graph():
@@ -37,6 +37,53 @@ def test_python_and_typescript_imports_build_dependency_graph():
     assert graph.has_edge("web/index.ts", "web/client.ts")
 
 
+def test_enhanced_import_extraction_resolves_side_effect_go_and_rust_imports():
+    files = [
+        SourceFile(
+            path=Path("web/setup.ts"),
+            relative_path="web/setup.ts",
+            text="import './client';\nexport * from './shared';\n",
+        ),
+        SourceFile(
+            path=Path("web/client.ts"),
+            relative_path="web/client.ts",
+            text="export const client = true;\n",
+        ),
+        SourceFile(
+            path=Path("web/shared.ts"),
+            relative_path="web/shared.ts",
+            text="export const shared = true;\n",
+        ),
+        SourceFile(
+            path=Path("cmd/server/main.go"),
+            relative_path="cmd/server/main.go",
+            text='package main\n\nimport (\n  "github.com/acme/app/internal/db"\n)\n',
+        ),
+        SourceFile(
+            path=Path("internal/db/db.go"),
+            relative_path="internal/db/db.go",
+            text="package db\n",
+        ),
+        SourceFile(
+            path=Path("src/lib.rs"),
+            relative_path="src/lib.rs",
+            text="mod storage;\n",
+        ),
+        SourceFile(
+            path=Path("src/storage.rs"),
+            relative_path="src/storage.rs",
+            text="pub fn load() {}\n",
+        ),
+    ]
+
+    graph = DependencyAnalyzer().analyze(files)
+
+    assert graph.has_edge("web/setup.ts", "web/client.ts")
+    assert graph.has_edge("web/setup.ts", "web/shared.ts")
+    assert graph.has_edge("cmd/server/main.go", "internal/db/db.go")
+    assert graph.has_edge("src/lib.rs", "src/storage.rs")
+
+
 def test_ranker_promotes_files_close_to_task_matches_in_graph():
     files = [
         SourceFile(
@@ -59,10 +106,13 @@ def test_ranker_promotes_files_close_to_task_matches_in_graph():
 
     ranked = SmartRanker().rank(files, graph, "fix database connection")
     priorities = {item.source.relative_path: item.priority for item in ranked}
+    db_file = next(item for item in ranked if item.source.relative_path == "src/db.py")
 
     assert priorities["src/db.py"] is Priority.HIGH
     assert priorities["src/app.py"] is Priority.HIGH
     assert "src/theme.py" not in priorities
+    assert any(reason.code == "TASK_MATCH" for reason in db_file.reason_codes)
+    assert db_file.reason
 
 
 def test_ranker_promotes_inbound_central_files_near_task_matches():

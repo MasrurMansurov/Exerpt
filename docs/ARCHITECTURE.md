@@ -1,15 +1,15 @@
-# Codepact Architecture
+# Exerpt Architecture
 
 ## Proposed File Structure
 
 ```text
-codepact/
+exerpt/
   pyproject.toml
   README.md
   docs/
     ARCHITECTURE.md
   src/
-    codepact/
+    exerpt/
       __init__.py
       cli.py              # Typer/Rich command surface.
       engine.py           # Orchestrates scan -> graph -> rank -> sift -> render.

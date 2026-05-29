@@ -219,16 +219,16 @@ select {
   color: rgb(var(--cp-code-attr));
 }
 
-.codepact-code-block code {
+.exerpt-code-block code {
   background: transparent;
 }
 
-.codepact-code-block .hljs {
+.exerpt-code-block .hljs {
   color: inherit;
   background: transparent;
 }
 
-.codepact-code-block pre {
+.exerpt-code-block pre {
   margin: 0;
 }
 

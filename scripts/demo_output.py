@@ -1,4 +1,4 @@
-"""Generate a self-hosted Codepact demo prompt."""
+"""Generate a self-hosted Exerpt demo prompt."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ TASK = "Optimize dependency graph"
 
 
 def main() -> None:
-    """Run Codepact against its own source tree and write demo_result.md."""
+    """Run Exerpt against its own source tree and write demo_result.md."""
     sys.path.insert(0, str(SRC_ROOT))
 
     try:
@@ -36,10 +36,10 @@ def build_demo(*, use_fallback_tokenizer: bool) -> tuple[str, int]:
     if use_fallback_tokenizer:
         install_fallback_tiktoken()
 
-    from codepact.engine import CodepactEngine
-    from codepact.models import BuildOptions
+    from exerpt.engine import ExerptEngine
+    from exerpt.models import BuildOptions
 
-    result = CodepactEngine().build_prompt(
+    result = ExerptEngine().build_prompt(
         BuildOptions(
             root=SRC_ROOT,
             task=TASK,

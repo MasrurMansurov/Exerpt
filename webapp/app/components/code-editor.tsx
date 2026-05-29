@@ -3,6 +3,7 @@
 import Editor, { type BeforeMount, type OnMount } from "@monaco-editor/react";
 import { useCallback, useMemo } from "react";
 import type { ThemeMode } from "../theme";
+import { useI18n } from "../i18n";
 
 type CodeEditorProps = {
   fileName: string;
@@ -12,11 +13,12 @@ type CodeEditorProps = {
 };
 
 export function CodeEditor({ fileName, themeMode, value, onChange }: CodeEditorProps) {
+  const { t } = useI18n();
   const language = useMemo(() => languageForFile(fileName), [fileName]);
-  const monacoTheme = themeMode === "light" ? "codepact-light" : "codepact-dark";
+  const monacoTheme = themeMode === "light" ? "exerpt-light" : "exerpt-dark";
 
   const beforeMount = useCallback<BeforeMount>((monaco) => {
-    monaco.editor.defineTheme("codepact-dark", {
+    monaco.editor.defineTheme("exerpt-dark", {
       base: "vs-dark",
       inherit: true,
       rules: [
@@ -39,7 +41,7 @@ export function CodeEditor({ fileName, themeMode, value, onChange }: CodeEditorP
       }
     });
 
-    monaco.editor.defineTheme("codepact-light", {
+    monaco.editor.defineTheme("exerpt-light", {
       base: "vs",
       inherit: true,
       rules: [
@@ -76,7 +78,7 @@ export function CodeEditor({ fileName, themeMode, value, onChange }: CodeEditorP
       beforeMount={beforeMount}
       onMount={onMount}
       onChange={(nextValue) => onChange(nextValue ?? "")}
-      loading={<div className="flex h-full items-center justify-center bg-app text-sm text-muted">Loading editor...</div>}
+      loading={<div className="flex h-full items-center justify-center bg-app text-sm text-muted">{t("loadingEditor")}</div>}
       options={{
         automaticLayout: true,
         bracketPairColorization: { enabled: true },

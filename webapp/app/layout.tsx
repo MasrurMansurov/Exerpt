@@ -1,9 +1,40 @@
 import type { Metadata } from "next";
+import { siteDescription, siteName, siteUrl } from "./config/site";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Codepact Workspace",
-  description: "IDE-like workspace for sifting code into AI-ready context."
+  title: {
+    default: "Exerpt Workspace",
+    template: `%s | ${siteName}`
+  },
+  description: siteDescription,
+  metadataBase: new URL(siteUrl),
+  alternates: {
+    canonical: "/"
+  },
+  openGraph: {
+    title: "Exerpt Workspace",
+    description: siteDescription,
+    siteName,
+    type: "website",
+    url: siteUrl
+  },
+  twitter: {
+    card: "summary",
+    title: "Exerpt Workspace",
+    description: siteDescription
+  },
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    shortcut: "/icon.svg",
+    apple: "/icon.svg"
+  },
+  applicationName: siteName,
+  appleWebApp: {
+    capable: true,
+    title: siteName
+  }
 };
 
 export default function RootLayout({

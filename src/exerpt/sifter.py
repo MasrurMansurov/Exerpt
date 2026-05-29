@@ -10,8 +10,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from codepact.language import LANGUAGE_BY_EXTENSION, detect_language
-from codepact.models import Priority, SourceFile
+from exerpt.language import LANGUAGE_BY_EXTENSION, detect_language
+from exerpt.models import Priority, SourceFile
 
 
 @dataclass(frozen=True)

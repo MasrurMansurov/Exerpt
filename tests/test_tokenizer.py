@@ -3,7 +3,7 @@ from __future__ import annotations
 import sys
 from types import SimpleNamespace
 
-from codepact.tokenizer import TokenCounter
+from exerpt.tokenizer import TokenCounter
 
 
 class FakeEncoding:
@@ -12,7 +12,7 @@ class FakeEncoding:
 
 
 def test_token_counter_counts_tokens_from_tiktoken_encoding(monkeypatch):
-    text = "Codepact compresses repositories into task-oriented context."
+    text = "Exerpt compresses repositories into task-oriented context."
     model = "gpt-4o-mini"
     fake_tiktoken = SimpleNamespace(
         encoding_for_model=lambda requested_model: FakeEncoding(),

@@ -1,4 +1,4 @@
-"""Core Codepact orchestration engine."""
+"""Core Exerpt orchestration engine."""
 
 from __future__ import annotations
 
@@ -9,10 +9,10 @@ from typing import Protocol
 
 import networkx as nx  # type: ignore[import-untyped]
 
-from codepact.graph import DependencyAnalyzer
-from codepact.i18n import translate
-from codepact.language import detect_language
-from codepact.models import (
+from exerpt.graph import DependencyAnalyzer
+from exerpt.i18n import translate
+from exerpt.language import detect_language
+from exerpt.models import (
     BuildOptions,
     BuildResult,
     DependencyEdge,
@@ -21,10 +21,10 @@ from codepact.models import (
     RenderProfile,
     SourceFile,
 )
-from codepact.ranker import SmartRanker
-from codepact.renderer import MarkdownRenderer
-from codepact.scanner import ProjectScanner
-from codepact.tokenizer import TokenCounter
+from exerpt.ranker import SmartRanker
+from exerpt.renderer import MarkdownRenderer
+from exerpt.scanner import ProjectScanner
+from exerpt.tokenizer import TokenCounter
 
 
 @dataclass(frozen=True)
@@ -43,8 +43,8 @@ class Scanner(Protocol):
         """Return source files for the engine pipeline."""
 
 
-class CodepactEngine:
-    """Build a compact, task-oriented LLM context from a repository."""
+class ExerptEngine:
+    """Build a focused, task-oriented LLM context from a repository."""
 
     def __init__(
         self,
@@ -81,6 +81,8 @@ class CodepactEngine:
                         if item.source.detected_language != "unknown"
                         else detect_language(item.source.relative_path)
                     ),
+                    importance_score=item.importance_score,
+                    reason_codes=tuple(item.reason_codes),
                 )
                 for item in ranked_files
             ],
@@ -228,7 +230,7 @@ class CodepactEngine:
 
     def _emergency_markdown(self, options: BuildOptions) -> str:
         lines = [
-            f"# {translate(options.locale, 'codepact_context')}",
+            f"# {translate(options.locale, 'exerpt_context')}",
             "",
             f"{translate(options.locale, 'task')}: {options.task}",
             translate(options.locale, "emergency_compressed"),
@@ -251,6 +253,8 @@ class CodepactEngine:
         compression_warning: str | None,
     ) -> RenderAttempt | None:
         markdown = self.renderer.render(ranked_files, dependency_graph, options, profile)
+        if compression_warning is not None:
+            markdown = self._with_compression_warning(markdown, compression_warning)
         markdown, tokens = self._with_debug_metadata(markdown, options, token_counter, strategy)
         if tokens <= options.token_limit:
             return RenderAttempt(
@@ -259,6 +263,9 @@ class CodepactEngine:
                 compression_warning=compression_warning,
             )
         return None
+
+    def _with_compression_warning(self, markdown: str, warning: str) -> str:
+        return f"{markdown.rstrip()}\n\n> {warning}\n"
 
     def _fill_with_medium_code(
         self,

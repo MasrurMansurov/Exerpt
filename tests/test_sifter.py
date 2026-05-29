@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from codepact.models import Priority, SourceFile
-from codepact.sifter import CodeSifter
+from exerpt.models import Priority, SourceFile
+from exerpt.sifter import CodeSifter
 
 
 def test_low_priority_sifting_keeps_signature_and_docstring_only():
@@ -18,9 +18,9 @@ def test_low_priority_sifting_keeps_signature_and_docstring_only():
         ),
     )
 
-    compact = CodeSifter().sift(source, Priority.LOW)
+    focused = CodeSifter().sift(source, Priority.LOW)
 
-    assert "def connect" in compact
-    assert "Open database connection" in compact
-    assert "[implementation hidden]" in compact
-    assert "password" not in compact
+    assert "def connect" in focused
+    assert "Open database connection" in focused
+    assert "[implementation hidden]" in focused
+    assert "password" not in focused

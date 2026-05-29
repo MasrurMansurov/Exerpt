@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from codepact.graph import DependencyAnalyzer
-from codepact.models import Priority, SourceFile
-from codepact.ranker import SmartRanker
-from codepact.scanner import ProjectScanner
-from codepact.sifter import CodeSifter
+from exerpt.graph import DependencyAnalyzer
+from exerpt.models import Priority, SourceFile
+from exerpt.ranker import SmartRanker
+from exerpt.scanner import ProjectScanner
+from exerpt.sifter import CodeSifter
 
 
 def test_generic_parser_skeletonizes_kotlin_without_body_or_comments():
@@ -24,13 +24,13 @@ def test_generic_parser_skeletonizes_kotlin_without_body_or_comments():
         ),
     )
 
-    compact = CodeSifter().signature_only(source)
+    focused = CodeSifter().signature_only(source)
 
     assert source.detected_language == "kotlin"
-    assert "class MainActivity" in compact
-    assert "fun onCreate" in compact
-    assert "setContentView" not in compact
-    assert "implementation comment" not in compact
+    assert "class MainActivity" in focused
+    assert "fun onCreate" in focused
+    assert "setContentView" not in focused
+    assert "implementation comment" not in focused
 
 
 def test_generic_parser_handles_unknown_language_structs_and_functions():
@@ -47,12 +47,12 @@ def test_generic_parser_handles_unknown_language_structs_and_functions():
         ),
     )
 
-    compact = CodeSifter().signature_only(source)
+    focused = CodeSifter().signature_only(source)
 
     assert source.detected_language == "unknown"
-    assert "const Widget = struct" in compact
-    assert "pub fn render" in compact
-    assert "expensiveRender" not in compact
+    assert "const Widget = struct" in focused
+    assert "pub fn render" in focused
+    assert "expensiveRender" not in focused
 
 
 def test_scanner_ignores_android_project_trash(tmp_path: Path):
@@ -114,7 +114,7 @@ def test_config_files_are_capped_unless_task_targets_config():
         SourceFile(
             path=Path("app/src/main/AndroidManifest.xml"),
             relative_path="app/src/main/AndroidManifest.xml",
-            text="<manifest><application android:label='Codepact' /></manifest>\n",
+            text="<manifest><application android:label='Exerpt' /></manifest>\n",
         ),
     ]
     graph = DependencyAnalyzer().analyze(files)

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 export type ThemeMode = "dark" | "light";
 
-const storageKey = "codepact-theme";
+const storageKey = "exerpt-theme";
 
 export const themeLabels: Record<ThemeMode, string> = {
   dark: "Dark",

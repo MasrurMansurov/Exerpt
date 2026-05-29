@@ -7,8 +7,8 @@ from typing import Any
 
 from pathspec import PathSpec
 
-from codepact.language import detect_language, is_ignored_project_path
-from codepact.models import SourceFile
+from exerpt.language import detect_language, is_ignored_project_path
+from exerpt.models import SourceFile
 
 
 class ProjectScanner:

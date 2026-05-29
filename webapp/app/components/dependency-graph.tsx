@@ -1,34 +1,37 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { GitBranch } from "lucide-react";
 import { useI18n } from "../i18n";
 import type { ThemeMode } from "../theme";
+import type { DependencyGraph, GraphNode, RankReason } from "../types/exerpt";
 
-type GraphNode = {
-  id: string;
-  priority: string;
-};
-
-type GraphEdge = {
-  source: string;
-  target: string;
-};
-
-type DependencyGraph = {
-  nodes: GraphNode[];
-  edges: GraphEdge[];
-};
+const maxRenderedNodes = 120;
+const maxRenderedEdges = 220;
+const rowHeight = 36;
+const listHeight = 252;
 
 export function DependencyGraphView({ graph, themeMode }: { graph: DependencyGraph; themeMode: ThemeMode }) {
   const { t } = useI18n();
   const [svg, setSvg] = useState("");
   const [renderError, setRenderError] = useState("");
+  const [selectedNodeId, setSelectedNodeId] = useState("");
+  const visibleGraph = useMemo(() => virtualizeGraph(graph), [graph]);
+  const selectedNode = visibleGraph.nodes.find((node) => node.id === selectedNodeId) ?? visibleGraph.nodes[0];
+
+  useEffect(() => {
+    if (!visibleGraph.nodes.length) {
+      setSelectedNodeId("");
+      return;
+    }
+    setSelectedNodeId((current) => (current && visibleGraph.nodes.some((node) => node.id === current) ? current : visibleGraph.nodes[0].id));
+  }, [visibleGraph.nodes]);
 
   useEffect(() => {
     let cancelled = false;
 
     async function renderGraph() {
-      if (!graph.nodes.length) {
+      if (!visibleGraph.nodes.length) {
         setSvg("");
         setRenderError("");
         return;
@@ -63,8 +66,8 @@ export function DependencyGraphView({ graph, themeMode }: { graph: DependencyGra
                   tertiaryColor: "#07100f"
                 }
         });
-        const definition = toMermaid(graph);
-        const { svg: renderedSvg } = await mermaid.render(`codepact-graph-${Date.now()}`, definition);
+        const definition = toMermaid(visibleGraph);
+        const { svg: renderedSvg } = await mermaid.render(`exerpt-graph-${Date.now()}`, definition);
         if (!cancelled) {
           setSvg(renderedSvg);
           setRenderError("");
@@ -80,7 +83,7 @@ export function DependencyGraphView({ graph, themeMode }: { graph: DependencyGra
     return () => {
       cancelled = true;
     };
-  }, [graph, themeMode, t]);
+  }, [visibleGraph, themeMode, t]);
 
   if (!graph.nodes.length) {
     return <div className="rounded-md border border-dashed border-border p-6 text-sm text-muted">{t("noGraph")}</div>;
@@ -91,10 +94,157 @@ export function DependencyGraphView({ graph, themeMode }: { graph: DependencyGra
   }
 
   return (
-    <div className="min-h-[560px] animate-fade-panel overflow-auto rounded-md border border-border bg-surface/5 p-4">
-      <div className="mermaid-graph min-w-[720px]" dangerouslySetInnerHTML={{ __html: svg }} />
+    <div className="animate-fade-panel space-y-3">
+      <div className="rounded-md border border-border bg-surface/[0.04] p-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-secondary">
+          <div className="flex items-center gap-2 font-semibold text-primary">
+            <GitBranch className="h-4 w-4 text-cobalt" />
+            {t("graphOverview")}
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <span>{t("graphNodes", { visible: visibleGraph.nodes.length, total: graph.nodes.length })}</span>
+            <span>{t("graphEdges", { visible: visibleGraph.edges.length, total: graph.edges.length })}</span>
+          </div>
+        </div>
+        {visibleGraph.wasVirtualized ? (
+          <div className="mt-2 rounded-md border border-warning/25 bg-warning/10 px-3 py-2 text-xs text-warning">
+            {t("graphVirtualized")}
+          </div>
+        ) : null}
+      </div>
+
+      <div className="min-h-[420px] overflow-auto rounded-md border border-border bg-surface/5 p-4">
+        <div className="mermaid-graph min-w-[720px]" dangerouslySetInnerHTML={{ __html: svg }} />
+      </div>
+
+      <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,20rem)]">
+        <VirtualNodeList nodes={visibleGraph.nodes} selectedId={selectedNode?.id ?? ""} onSelect={setSelectedNodeId} />
+        <NodeDetails node={selectedNode} />
+      </div>
     </div>
   );
+}
+
+function VirtualNodeList({
+  nodes,
+  selectedId,
+  onSelect
+}: {
+  nodes: GraphNode[];
+  selectedId: string;
+  onSelect: (id: string) => void;
+}) {
+  const { t } = useI18n();
+  const [scrollTop, setScrollTop] = useState(0);
+  const startIndex = Math.max(0, Math.floor(scrollTop / rowHeight) - 3);
+  const visibleCount = Math.ceil(listHeight / rowHeight) + 6;
+  const visibleNodes = nodes.slice(startIndex, startIndex + visibleCount);
+
+  return (
+    <section className="overflow-hidden rounded-md border border-border bg-surface/[0.04]">
+      <div className="border-b border-border bg-panel-strong px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted">
+        {t("graphNodeList")}
+      </div>
+      <div
+        className="overflow-auto"
+        style={{ height: listHeight }}
+        onScroll={(event) => setScrollTop(event.currentTarget.scrollTop)}
+      >
+        <div className="relative" style={{ height: nodes.length * rowHeight }}>
+          {visibleNodes.map((node, index) => (
+            <button
+              key={node.id}
+              type="button"
+              onClick={() => onSelect(node.id)}
+              className={`absolute left-0 grid w-full grid-cols-[5rem_minmax(0,1fr)] items-center gap-2 px-3 text-left text-xs transition ${
+                node.id === selectedId ? "bg-cobalt/20 text-primary" : "text-secondary hover:bg-surface/[0.08]"
+              }`}
+              style={{ top: (startIndex + index) * rowHeight, height: rowHeight }}
+            >
+              <span className="rounded bg-surface/[0.08] px-2 py-1 text-[10px] font-semibold uppercase">
+                {node.priority || t("notAvailable")}
+              </span>
+              <span className="truncate">{node.id}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function NodeDetails({ node }: { node?: GraphNode }) {
+  const { t } = useI18n();
+
+  if (!node) {
+    return null;
+  }
+
+  return (
+    <section className="rounded-md border border-border bg-surface/[0.04] p-3">
+      <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted">{t("nodeDetails")}</div>
+      <div className="break-all text-sm font-semibold text-primary">{node.id}</div>
+      <dl className="mt-3 space-y-2 text-xs text-secondary">
+        <div className="flex justify-between gap-3">
+          <dt>{t("priority")}</dt>
+          <dd className="font-semibold uppercase text-primary">{node.priority}</dd>
+        </div>
+        <div className="flex justify-between gap-3">
+          <dt>{t("detectedLanguage")}</dt>
+          <dd className="font-semibold text-primary">{node.detected_language ?? t("unknown")}</dd>
+        </div>
+        <div className="flex justify-between gap-3">
+          <dt>{t("importanceScore")}</dt>
+          <dd className="font-semibold text-primary">{(node.importance_score ?? 0).toFixed(2)}</dd>
+        </div>
+      </dl>
+      {node.reason_codes?.length ? (
+        <ul className="mt-3 space-y-1 text-xs text-secondary">
+          {node.reason_codes.map((reason) => (
+            <li key={`${node.id}-${reason.code}`} className="rounded bg-surface/[0.06] px-2 py-1">
+              {localizeReason(reason, t)}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </section>
+  );
+}
+
+function virtualizeGraph(graph: DependencyGraph) {
+  if (graph.nodes.length <= maxRenderedNodes && graph.edges.length <= maxRenderedEdges) {
+    return { ...graph, wasVirtualized: false };
+  }
+
+  const degree = new Map<string, number>();
+  for (const node of graph.nodes) {
+    degree.set(node.id, 0);
+  }
+  for (const edge of graph.edges) {
+    degree.set(edge.source, (degree.get(edge.source) ?? 0) + 1);
+    degree.set(edge.target, (degree.get(edge.target) ?? 0) + 1);
+  }
+
+  const priorityWeight: Record<string, number> = { high: 4, medium: 2, low: 1 };
+  const nodes = [...graph.nodes]
+    .sort((left, right) => {
+      const leftPriority = priorityWeight[left.priority] ?? 0;
+      const rightPriority = priorityWeight[right.priority] ?? 0;
+      return (
+        rightPriority - leftPriority ||
+        (right.importance_score ?? 0) - (left.importance_score ?? 0) ||
+        (degree.get(right.id) ?? 0) - (degree.get(left.id) ?? 0) ||
+        left.id.localeCompare(right.id)
+      );
+    })
+    .slice(0, maxRenderedNodes);
+
+  const nodeIds = new Set(nodes.map((node) => node.id));
+  const edges = graph.edges
+    .filter((edge) => nodeIds.has(edge.source) && nodeIds.has(edge.target))
+    .slice(0, maxRenderedEdges);
+
+  return { nodes, edges, wasVirtualized: true };
 }
 
 function toMermaid(graph: DependencyGraph) {
@@ -137,6 +287,50 @@ function toMermaid(graph: DependencyGraph) {
   }
 
   return lines.join("\n");
+}
+
+function localizeReason(reason: RankReason, t: ReturnType<typeof useI18n>["t"]) {
+  const metadata = reason.metadata ?? {};
+  const values = {
+    matches: normalizeReasonValue(metadata.matches, 0),
+    centrality: normalizeReasonValue(metadata.centrality, 0),
+    distance: normalizeReasonValue(metadata.distance, t("notAvailable")),
+    final_score: normalizeReasonValue(metadata.final_score, reason.score.toFixed(2))
+  };
+
+  switch (reason.code) {
+    case "TASK_MATCH":
+      return t("rankReasonTaskMatch", values);
+    case "CORE_ARCH":
+      return t("rankReasonCoreArch", values);
+    case "GRAPH_DISTANCE":
+      return t("rankReasonGraphDistance", values);
+    case "ANDROID_SOURCE":
+      return t("rankReasonAndroidSource");
+    case "SOURCE_FILE":
+      return t("rankReasonSourceFile");
+    case "ENTRY_POINT":
+      return t("rankReasonEntryPoint");
+    case "CONFIG_MATCH":
+      return t("rankReasonConfigMatch");
+    case "BOILERPLATE_PENALTY":
+      return t("rankReasonBoilerplatePenalty");
+    case "CONFIG_PRIORITY_CAP":
+      return t("rankReasonConfigPriorityCap");
+    case "BACKGROUND_CONTEXT":
+      return t("rankReasonBackgroundContext");
+    case "FINAL_SCORE":
+      return t("rankReasonFinalScore", values);
+    default:
+      return reason.explanation;
+  }
+}
+
+function normalizeReasonValue(value: string | number | boolean | null | undefined, fallback: string | number) {
+  if (typeof value === "number" || typeof value === "string") {
+    return value;
+  }
+  return fallback;
 }
 
 function escapeMermaidLabel(label: string) {

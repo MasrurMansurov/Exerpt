@@ -1,9 +1,12 @@
-# **Stop Feeding Your LLM Garbage Context. Start Using Codepact.**
+# **Exerpt**
 
-**Codepact is a Context-Aware Sifting Engine for real codebases.**
+**Precision Context Engineering for LLMs.**
 
-It reads your project, understands the dependency graph, ranks what matters for
-your task, and ships only the useful meat to your LLM.
+Stop feeding your LLM garbage context. Exerpt is a Context-Aware Sifting Engine
+for real codebases.
+
+Exerpt sifts through your codebase to extract the architectural essence, fitting
+massive repos into tight token limits.
 
 Less junk. Fewer tokens. Better answers.
 
@@ -12,10 +15,15 @@ GPT-4o, Claude 3.5 Sonnet, or any serious coding model without dumping the
 entire repo into the prompt window.
 
 ```bash
-codepact build --task "Fix navigation in MainActivity" --limit 8k --output codepact.md
+exerpt build --task "Fix navigation in MainActivity" --limit 8k --output exerpt.md
 ```
 
-## Why Codepact?
+## About
+
+Exerpt sifts through your codebase to extract the architectural essence, fitting
+massive repos into tight token limits.
+
+## Why Exerpt?
 
 Most AI coding workflows waste money before the model even starts thinking.
 
@@ -25,12 +33,12 @@ They include generated junk.
 
 They bury the important files under boilerplate.
 
-Codepact fixes that.
+Exerpt fixes that.
 
 It can save thousands of dollars in token costs on large teams by sending only
 the code that actually matters for the task.
 
-| Without Codepact | With Codepact |
+| Without Exerpt | With Exerpt |
 | --- | --- |
 | Paste the whole repo and pray. | Send ranked, task-aware context. |
 | Burn tokens on tests, locks, assets, and boilerplate. | Drop noise before it hits the model. |
@@ -41,7 +49,7 @@ the code that actually matters for the task.
 
 | Feature | What It Means |
 | --- | --- |
-| 🧠 **Smart Sifting** | Not a file copier. Codepact uses dependency analysis, centrality scoring, task keywords, and smart decay to find the files that define the architecture. |
+| 🧠 **Smart Sifting** | Not a file copier. Exerpt uses dependency analysis, centrality scoring, task keywords, and smart decay to find the files that define the architecture. |
 | 🌍 **Global Native** | UI localization for EN, RU, ZH, JA, and HI. No more language barriers for dev teams. |
 | 🎨 **IDE-Grade Experience** | Monaco editor, JetBrains Mono aesthetic, professional dark/light themes, and a fast three-panel workspace. |
 | 📊 **Graph Insight** | Visualize the DNA of your project through dependency trees and priority-ranked nodes. |
@@ -53,14 +61,14 @@ the code that actually matters for the task.
 ### 1. Backend: FastAPI + Python
 
 ```bash
-git clone https://github.com/<you>/codepact.git
-cd codepact
+git clone https://github.com/<you>/exerpt.git
+cd exerpt
 
 python -m venv .venv
 source .venv/bin/activate
 
 pip install -e ".[dev]"
-uvicorn codepact.api:app --reload --host 0.0.0.0 --port 8000
+uvicorn exerpt.api:app --reload --host 0.0.0.0 --port 8000
 ```
 
 Backend runs at:
@@ -86,7 +94,7 @@ http://localhost:3000
 If the API lives somewhere else:
 
 ```bash
-NEXT_PUBLIC_CODEPACT_API_URL=http://localhost:8000 npm run dev
+NEXT_PUBLIC_EXERPT_API_URL=http://localhost:8000 npm run dev
 ```
 
 ## CLI
@@ -94,16 +102,16 @@ NEXT_PUBLIC_CODEPACT_API_URL=http://localhost:8000 npm run dev
 Generate an AI-ready context file:
 
 ```bash
-codepact build \
+exerpt build \
   --task "Explain how MainActivity handles user navigation" \
   --limit 8k \
-  --output codepact.md
+  --output exerpt.md
 ```
 
 Scan another project:
 
 ```bash
-codepact build \
+exerpt build \
   --root ~/Projects/mobile-app \
   --task "Fix chat creation flow" \
   --limit 16k \
@@ -113,7 +121,7 @@ codepact build \
 Skip tests when they are not relevant:
 
 ```bash
-codepact build \
+exerpt build \
   --task "Reduce cold start latency" \
   --exclude-tests \
   --limit 12k
@@ -121,7 +129,7 @@ codepact build \
 
 ## Web Workspace
 
-Codepact includes a professional IDE-like cockpit:
+Exerpt includes a professional IDE-like cockpit:
 
 - File explorer with folder upload.
 - Monaco editor for source inspection and edits.
@@ -146,7 +154,7 @@ No upload required to try it. The demo project opens instantly.
 
 ## Under the Hood
 
-Codepact is fast because the architecture is boring in the best way.
+Exerpt is fast because the architecture is boring in the best way.
 
 | Layer | Tech | Why |
 | --- | --- | --- |
@@ -207,7 +215,7 @@ npm run build:wasm
 ## Project Layout
 
 ```text
-src/codepact/
+src/exerpt/
   api.py        FastAPI backend
   cli.py        Typer/Rich CLI
   engine.py     orchestration and token fitting

@@ -1,11 +1,13 @@
-"""Shared domain models for Codepact."""
+"""Shared domain models for Exerpt."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Literal
 from pathlib import Path
+from typing import Literal
+
+ReasonMetadata = dict[str, str | int | float | bool | None]
 
 
 class TokenBudgetExceeded(RuntimeError):
@@ -46,9 +48,19 @@ class SourceFile:
 
     def __post_init__(self) -> None:
         if not self.detected_language or self.detected_language == "unknown":
-            from codepact.language import detect_language
+            from exerpt.language import detect_language
 
             self.detected_language = detect_language(self.relative_path)
+
+
+@dataclass(slots=True)
+class RankReason:
+    """Structured reason emitted by the ranker for frontend localization."""
+
+    code: str
+    score: float
+    explanation: str
+    metadata: ReasonMetadata = field(default_factory=dict)
 
 
 @dataclass(slots=True)
@@ -57,7 +69,8 @@ class RankedFile:
 
     source: SourceFile
     priority: Priority
-    reason: str
+    reason: str = ""
+    reason_codes: list[RankReason] = field(default_factory=list)
     lexical_score: int = 0
     graph_distance: int | None = None
     importance_score: float = 0.0
@@ -87,6 +100,8 @@ class DependencyNode:
     id: str
     priority: str
     detected_language: str = "unknown"
+    importance_score: float = 0.0
+    reason_codes: tuple[RankReason, ...] = ()
 
 
 @dataclass(frozen=True)

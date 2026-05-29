@@ -12,8 +12,8 @@ export type Locale = "en" | "ru" | "zh" | "ja" | "hi";
 type Dictionary = typeof en;
 type TranslationKey = keyof Dictionary;
 
-const storageKey = "codepact-locale";
-const languageChangeEvent = "codepact-languagechange";
+const storageKey = "exerpt-locale";
+const languageChangeEvent = "exerpt-languagechange";
 const dictionaries: Record<Locale, Dictionary> = { en, ru, zh, ja, hi };
 
 export const localeOptions: Array<{ code: Locale; label: string; nativeLabel: string }> = [

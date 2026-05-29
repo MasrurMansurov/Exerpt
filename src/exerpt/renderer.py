@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 import networkx as nx  # type: ignore[import-untyped]
 
-from codepact.i18n import translate
-from codepact.language import detect_language
-from codepact.models import BuildOptions, Priority, RankedFile, RenderProfile
-from codepact.sifter import CodeSifter
+from exerpt.i18n import translate
+from exerpt.language import detect_language
+from exerpt.models import BuildOptions, Priority, RankedFile, RenderProfile
+from exerpt.sifter import CodeSifter
 
 
 class MarkdownRenderer:
@@ -33,7 +35,7 @@ class MarkdownRenderer:
         in_depth_code = translate(options.locale, "in_depth_code")
         system_instructions = translate(options.locale, "system_instructions")
         lines: list[str] = [
-            f"# {translate(options.locale, 'codepact_context')}",
+            f"# {translate(options.locale, 'exerpt_context')}",
             "",
             f"## {translate(options.locale, 'table_of_contents')}",
             "",
@@ -76,7 +78,7 @@ class MarkdownRenderer:
                 f"{item.priority.value.upper()} | "
                 f"`{item.source.relative_path}` | "
                 f"{detected_language} | "
-                f"{self._localized_reason(item.reason, options.locale)} | "
+                f"{self._localized_reason(item, options.locale)} | "
                 f"{distance} | "
                 f"{dependencies} |"
             )
@@ -132,7 +134,7 @@ class MarkdownRenderer:
         profile: RenderProfile,
     ) -> str:
         lines = [
-            f"# {translate(options.locale, 'codepact_context')}",
+            f"# {translate(options.locale, 'exerpt_context')}",
             "",
             f"{translate(options.locale, 'task')}: {options.task}",
             translate(options.locale, "minimal_compressed"),
@@ -207,7 +209,7 @@ class MarkdownRenderer:
             f"#### `{item.source.relative_path}`",
             "",
             f"- {translate(locale, 'detected_language')}: {detected_language}",
-            f"- {translate(locale, 'reason')}: {self._localized_reason(item.reason, locale)}",
+            f"- {translate(locale, 'reason')}: {self._localized_reason(item, locale)}",
             f"- {translate(locale, 'graph_distance')}: {distance}",
             f"- {translate(locale, 'summary')}: {summary}",
             "",
@@ -235,7 +237,11 @@ class MarkdownRenderer:
             return translate(locale, "none")
         return ", ".join(f"`{dependency}`" for dependency in dependencies[:6])
 
-    def _localized_reason(self, reason: str, locale: str) -> str:
+    def _localized_reason(self, item: RankedFile, locale: str) -> str:
+        if item.reason_codes:
+            return "; ".join(self._localized_rank_reason(reason.code, reason.metadata, locale) for reason in item.reason_codes)
+
+        reason = item.reason
         if locale == "en":
             return reason
         replacements = {
@@ -305,6 +311,15 @@ class MarkdownRenderer:
         for source, target in locale_replacements.items():
             localized = localized.replace(source, target)
         return localized
+
+    def _localized_rank_reason(self, code: str, metadata: Mapping[str, object], locale: str) -> str:
+        values = {
+            "matches": metadata.get("matches", 0),
+            "centrality": metadata.get("centrality", 0),
+            "distance": metadata.get("distance", translate(locale, "not_available")),
+            "final_score": metadata.get("final_score", 0),
+        }
+        return translate(locale, f"rank_reason_{code.lower()}", **values)
 
     def _included_files(
         self,

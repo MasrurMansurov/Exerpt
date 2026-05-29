@@ -6,9 +6,9 @@ from types import SimpleNamespace
 
 import networkx as nx  # type: ignore[import-untyped]
 
-from codepact.engine import CodepactEngine
-from codepact.models import BuildOptions, Priority, RankedFile, RenderProfile, SourceFile
-from codepact.renderer import MarkdownRenderer
+from exerpt.engine import ExerptEngine
+from exerpt.models import BuildOptions, Priority, RankedFile, RenderProfile, SourceFile
+from exerpt.renderer import MarkdownRenderer
 
 
 class FakeEncoding:
@@ -88,7 +88,7 @@ def test_engine_auto_shrinks_to_final_markdown_token_limit(monkeypatch):
         )
         for index in range(6)
     ]
-    result = CodepactEngine(scanner=FakeScanner(files)).build_prompt(
+    result = ExerptEngine(scanner=FakeScanner(files)).build_prompt(
         BuildOptions(
             root=Path("."),
             task="billing",
@@ -101,6 +101,7 @@ def test_engine_auto_shrinks_to_final_markdown_token_limit(monkeypatch):
     assert result.tokens <= 120
     assert result.tokens == len(FakeEncoding().encode(result.markdown))
     assert result.compression_warning == "Aggressively compressed to fit 120 tokens limit"
+    assert "> Aggressively compressed to fit 120 tokens limit" in result.markdown
     assert "```python" in result.markdown
     assert "def run():" in result.markdown
     assert "Strategy: Snipped" in result.markdown
@@ -133,7 +134,7 @@ def test_engine_keeps_high_priority_code_when_aggressively_compressed(monkeypatc
         ],
     ]
 
-    result = CodepactEngine(scanner=FakeScanner(files)).build_prompt(
+    result = ExerptEngine(scanner=FakeScanner(files)).build_prompt(
         BuildOptions(
             root=Path("."),
             task="Explain navigation intent startActivity",
@@ -202,7 +203,7 @@ def test_engine_fills_underused_budget_with_medium_full_code(monkeypatch):
         ],
     ]
 
-    result = CodepactEngine(
+    result = ExerptEngine(
         scanner=FakeScanner([high, *medium_files]),
         ranker=FakeRanker(ranked_files),
     ).build_prompt(

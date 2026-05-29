@@ -3,13 +3,13 @@ requires = ["hatchling>=1.25"]
 build-backend = "hatchling.build"
 
 [project]
-name = "codepact"
+name = "exerpt"
 version = "0.1.0"
-description = "Task-oriented codebase sifter for compact LLM prompts."
+description = "Task-oriented codebase sifter for focused LLM prompts."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
-authors = [{ name = "Codepact Contributors" }]
+authors = [{ name = "Exerpt Contributors" }]
 dependencies = [
   "charset-normalizer>=3.3",
   "fastapi>=0.115",
@@ -34,10 +34,10 @@ dev = [
 ]
 
 [project.scripts]
-codepact = "codepact.cli:main"
+exerpt = "exerpt.cli:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/codepact"]
+packages = ["src/exerpt"]
 
 [tool.ruff]
 line-length = 100

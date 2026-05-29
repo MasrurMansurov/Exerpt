@@ -1,4 +1,4 @@
-"""Codepact package."""
+"""Exerpt package."""
 
 __all__ = ["__version__"]
 

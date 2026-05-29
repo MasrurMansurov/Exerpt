@@ -1,4 +1,4 @@
-"""Small localization layer for generated Codepact output."""
+"""Small localization layer for generated Exerpt output."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ SUPPORTED_LOCALES: set[str] = {"en", "ru", "zh", "ja", "hi"}
 
 MESSAGES: dict[Locale, dict[str, str]] = {
     "en": {
-        "codepact_context": "Codepact Context",
+        "exerpt_context": "Exerpt Context",
         "table_of_contents": "Table of Contents",
         "project_map": "Project Map",
         "task_context": "Task Context",
@@ -39,6 +39,18 @@ MESSAGES: dict[Locale, dict[str, str]] = {
         "strategy_full_code": "FullCode",
         "strategy_snipped": "Snipped",
         "compression_warning": "Aggressively compressed to fit {limit} limit",
+        "token_limit_reached": "Token limit reached for {limit} budget.",
+        "rank_reason_task_match": "task keyword match ({matches})",
+        "rank_reason_core_arch": "inbound centrality {centrality}",
+        "rank_reason_graph_distance": "dependency graph distance {distance}",
+        "rank_reason_android_source": "Android source boost",
+        "rank_reason_source_file": "source file boost",
+        "rank_reason_entry_point": "entry-point boost",
+        "rank_reason_config_match": "task-relevant config",
+        "rank_reason_boilerplate_penalty": "boilerplate penalty",
+        "rank_reason_config_priority_cap": "config/data priority cap",
+        "rank_reason_background_context": "background context",
+        "rank_reason_final_score": "score {final_score}",
         "system_instruction_body": (
             "Use this sifted repository context to solve the task. Treat HIGH files as "
             "authoritative implementation detail, MEDIUM files as dependency contracts, "
@@ -48,7 +60,7 @@ MESSAGES: dict[Locale, dict[str, str]] = {
         ),
     },
     "ru": {
-        "codepact_context": "Контекст Codepact",
+        "exerpt_context": "Контекст Exerpt",
         "table_of_contents": "Содержание",
         "project_map": "Карта проекта",
         "task_context": "Контекст задачи",
@@ -70,13 +82,25 @@ MESSAGES: dict[Locale, dict[str, str]] = {
         "summary": "Сводка",
         "none": "нет",
         "not_available": "н/д",
-        "minimal_compressed": "Контекст был агрессивно сжат, чтобы уложиться в лимит токенов.",
-        "emergency_compressed": "Агрессивно сжато, чтобы уложиться в лимит токенов.",
+        "minimal_compressed": "Контекст максимально сжат для соответствия лимиту токенов.",
+        "emergency_compressed": "Максимально сжато для соответствия лимиту токенов.",
         "code_omitted": "Код опущен: лимит токенов слишком мал даже для одного фрагмента.",
         "debug": "[Отладка] Лимит: {budget}, Использовано: {used}, Стратегия: {strategy}.",
         "strategy_full_code": "ПолныйКод",
         "strategy_snipped": "Фрагменты",
-        "compression_warning": "Агрессивно сжато, чтобы уложиться в лимит {limit}",
+        "compression_warning": "Максимально сжато для соответствия лимиту {limit}",
+        "token_limit_reached": "Достигнут лимит токенов {limit}.",
+        "rank_reason_task_match": "совпадение с ключевыми словами задачи ({matches})",
+        "rank_reason_core_arch": "входящая центральность {centrality}",
+        "rank_reason_graph_distance": "дистанция в графе зависимостей {distance}",
+        "rank_reason_android_source": "бонус Android-исходника",
+        "rank_reason_source_file": "бонус исходного файла",
+        "rank_reason_entry_point": "бонус точки входа",
+        "rank_reason_config_match": "конфиг относится к задаче",
+        "rank_reason_boilerplate_penalty": "штраф за boilerplate",
+        "rank_reason_config_priority_cap": "ограничение приоритета для config/data",
+        "rank_reason_background_context": "фоновый контекст",
+        "rank_reason_final_score": "оценка {final_score}",
         "system_instruction_body": (
             "Используй этот отфильтрованный контекст репозитория для решения задачи. "
             "Считай файлы HIGH авторитетными деталями реализации, MEDIUM - контрактами "
@@ -86,7 +110,7 @@ MESSAGES: dict[Locale, dict[str, str]] = {
         ),
     },
     "zh": {
-        "codepact_context": "Codepact 上下文",
+        "exerpt_context": "Exerpt 上下文",
         "table_of_contents": "目录",
         "project_map": "项目地图",
         "task_context": "任务上下文",
@@ -108,13 +132,25 @@ MESSAGES: dict[Locale, dict[str, str]] = {
         "summary": "摘要",
         "none": "无",
         "not_available": "不可用",
-        "minimal_compressed": "上下文已被强力压缩以适配 token 限制。",
-        "emergency_compressed": "已强力压缩以适配 token 限制。",
+        "minimal_compressed": "上下文已大幅压缩以符合 token 限制。",
+        "emergency_compressed": "已大幅压缩以符合 token 限制。",
         "code_omitted": "由于 token 限制过小，连一个代码片段也无法包含。",
         "debug": "[调试] 预算: {budget}, 已用: {used}, 策略: {strategy}.",
         "strategy_full_code": "完整代码",
         "strategy_snipped": "片段",
-        "compression_warning": "已强力压缩以适配 {limit} 限制",
+        "compression_warning": "已大幅压缩以符合 {limit} 限制",
+        "token_limit_reached": "已达到 {limit} token 限制。",
+        "rank_reason_task_match": "任务关键词匹配 ({matches})",
+        "rank_reason_core_arch": "入向中心性 {centrality}",
+        "rank_reason_graph_distance": "依赖图距离 {distance}",
+        "rank_reason_android_source": "Android 源码加权",
+        "rank_reason_source_file": "源码文件加权",
+        "rank_reason_entry_point": "入口文件加权",
+        "rank_reason_config_match": "任务相关配置",
+        "rank_reason_boilerplate_penalty": "样板代码惩罚",
+        "rank_reason_config_priority_cap": "配置/数据优先级上限",
+        "rank_reason_background_context": "背景上下文",
+        "rank_reason_final_score": "分数 {final_score}",
         "system_instruction_body": (
             "使用这个筛选后的仓库上下文来完成任务。将 HIGH 文件视为权威实现细节，"
             "MEDIUM 文件视为依赖契约，LOW 文件视为压缩后的方向信息。除非隐藏细节"
@@ -122,7 +158,7 @@ MESSAGES: dict[Locale, dict[str, str]] = {
         ),
     },
     "ja": {
-        "codepact_context": "Codepact コンテキスト",
+        "exerpt_context": "Exerpt コンテキスト",
         "table_of_contents": "目次",
         "project_map": "プロジェクトマップ",
         "task_context": "タスクコンテキスト",
@@ -144,13 +180,25 @@ MESSAGES: dict[Locale, dict[str, str]] = {
         "summary": "概要",
         "none": "なし",
         "not_available": "n/a",
-        "minimal_compressed": "トークン上限に収めるため、コンテキストを強く圧縮しました。",
-        "emergency_compressed": "トークン上限に収めるため強く圧縮しました。",
+        "minimal_compressed": "トークン制限に合わせてコンテキストを大幅に圧縮しました。",
+        "emergency_compressed": "トークン制限に合わせて大幅に圧縮されました。",
         "code_omitted": "トークン上限が小さすぎるため、コード片も含められませんでした。",
         "debug": "[Debug] 予算: {budget}, 使用: {used}, 戦略: {strategy}.",
         "strategy_full_code": "FullCode",
         "strategy_snipped": "Snipped",
-        "compression_warning": "{limit} 上限に収めるため強く圧縮しました",
+        "compression_warning": "{limit}制限に合わせて大幅に圧縮されました",
+        "token_limit_reached": "{limit} のトークン制限に達しました。",
+        "rank_reason_task_match": "タスクキーワード一致 ({matches})",
+        "rank_reason_core_arch": "入力中心性 {centrality}",
+        "rank_reason_graph_distance": "依存グラフ距離 {distance}",
+        "rank_reason_android_source": "Android ソース加点",
+        "rank_reason_source_file": "ソースファイル加点",
+        "rank_reason_entry_point": "エントリーポイント加点",
+        "rank_reason_config_match": "タスク関連設定",
+        "rank_reason_boilerplate_penalty": "boilerplate ペナルティ",
+        "rank_reason_config_priority_cap": "config/data 優先度上限",
+        "rank_reason_background_context": "背景コンテキスト",
+        "rank_reason_final_score": "スコア {final_score}",
         "system_instruction_body": (
             "この選別済みリポジトリコンテキストを使ってタスクを解決してください。"
             "HIGH ファイルは実装の正本、MEDIUM ファイルは依存契約、LOW ファイルは"
@@ -159,7 +207,7 @@ MESSAGES: dict[Locale, dict[str, str]] = {
         ),
     },
     "hi": {
-        "codepact_context": "Codepact संदर्भ",
+        "exerpt_context": "Exerpt संदर्भ",
         "table_of_contents": "विषय सूची",
         "project_map": "प्रोजेक्ट मैप",
         "task_context": "टास्क संदर्भ",
@@ -181,13 +229,25 @@ MESSAGES: dict[Locale, dict[str, str]] = {
         "summary": "सारांश",
         "none": "कोई नहीं",
         "not_available": "लागू नहीं",
-        "minimal_compressed": "टोकन सीमा में फिट करने के लिए संदर्भ को आक्रामक रूप से compress किया गया।",
-        "emergency_compressed": "टोकन सीमा में फिट करने के लिए आक्रामक compression किया गया।",
+        "minimal_compressed": "संदर्भ को टोकन सीमा में फिट होने के लिए आक्रामक रूप से संकुचित किया गया।",
+        "emergency_compressed": "टोकन सीमा में फिट होने के लिए आक्रामक रूप से संकुचित।",
         "code_omitted": "टोकन सीमा इतनी छोटी है कि एक snippet भी शामिल नहीं हो सकता।",
         "debug": "[Debug] बजट: {budget}, उपयोग: {used}, रणनीति: {strategy}.",
         "strategy_full_code": "FullCode",
         "strategy_snipped": "Snipped",
-        "compression_warning": "{limit} सीमा में फिट करने के लिए आक्रामक compression किया गया",
+        "compression_warning": "{limit} सीमा में फिट होने के लिए आक्रामक रूप से संकुचित",
+        "token_limit_reached": "{limit} टोकन सीमा पहुंच गई।",
+        "rank_reason_task_match": "टास्क keyword match ({matches})",
+        "rank_reason_core_arch": "inbound centrality {centrality}",
+        "rank_reason_graph_distance": "dependency graph दूरी {distance}",
+        "rank_reason_android_source": "Android source boost",
+        "rank_reason_source_file": "source file boost",
+        "rank_reason_entry_point": "entry-point boost",
+        "rank_reason_config_match": "task-relevant config",
+        "rank_reason_boilerplate_penalty": "boilerplate penalty",
+        "rank_reason_config_priority_cap": "config/data priority cap",
+        "rank_reason_background_context": "background context",
+        "rank_reason_final_score": "score {final_score}",
         "system_instruction_body": (
             "इस sifted repository context से टास्क हल करें। HIGH files को authoritative "
             "implementation detail, MEDIUM files को dependency contracts, और LOW files को "

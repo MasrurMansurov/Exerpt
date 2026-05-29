@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <style>
+    :root { color: #091413; }
+    @media (prefers-color-scheme: dark) { :root { color: #b0e4cc; } }
+  </style>
+  <rect width="512" height="512" rx="112" fill="transparent"/>
+  <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="38">
+    <path d="M92 150h160" opacity=".44"/>
+    <path d="M92 256h122" opacity=".7"/>
+    <path d="M92 362h160" opacity=".44"/>
+    <path d="M258 160 360 256 258 352" opacity=".78"/>
+  </g>
+  <rect x="336" y="216" width="80" height="80" rx="16" fill="currentColor" transform="rotate(45 376 256)"/>
+</svg>

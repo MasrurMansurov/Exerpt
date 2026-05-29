@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from codepact.scanner import ProjectScanner
+from exerpt.scanner import ProjectScanner
 
 
 def test_gitignore_rules_are_honored(tmp_path):

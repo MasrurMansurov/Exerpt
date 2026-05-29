@@ -5,18 +5,14 @@ import { useEffect, useState } from "react";
 import { ArrowRight, Blocks, Code2, FolderTree, Globe2, Moon, Sun } from "lucide-react";
 import { useI18n } from "../i18n";
 import { useThemeMode } from "../theme";
-import { BrandLogo } from "./brand-logo";
+import { Logo } from "./Logo";
 
 const Workspace = dynamic(() => import("./Workspace").then((mod) => mod.Workspace), {
   ssr: false,
-  loading: () => (
-    <main className="flex min-h-screen items-center justify-center bg-app text-sm text-muted">
-      Loading workspace...
-    </main>
-  )
+  loading: () => <WorkspaceLoading />
 });
 
-const workspaceStartedStorageKey = "codepact-workspace-started";
+const workspaceStartedStorageKey = "exerpt-workspace-started";
 
 export function HomeClient() {
   const { language, localeOptions, setLanguage, t } = useI18n();
@@ -24,6 +20,15 @@ export function HomeClient() {
   const [started, setStarted] = useState(false);
 
   useEffect(() => {
+    const hasInvite =
+      new URLSearchParams(window.location.search).has("settings") ||
+      new URLSearchParams(window.location.search).has("invite") ||
+      window.location.pathname.startsWith("/share/");
+    if (hasInvite) {
+      window.localStorage.setItem(workspaceStartedStorageKey, "true");
+      setStarted(true);
+      return;
+    }
     setStarted(window.localStorage.getItem(workspaceStartedStorageKey) === "true");
   }, []);
 
@@ -41,10 +46,17 @@ export function HomeClient() {
       <section className="mx-auto flex min-h-screen max-w-7xl flex-col px-5 py-5">
         <header className="flex h-14 items-center justify-between border-b border-border">
           <div className="flex min-w-0 items-center gap-3">
-            <BrandLogo className="h-9 w-9 shrink-0 shadow-glow" />
+            <Logo
+              iconClassName="h-9 w-9 drop-shadow-[0_0_18px_rgba(176,228,204,0.22)]"
+              wordmarkClassName="font-mono text-base font-semibold tracking-normal"
+            />
             <div className="min-w-0">
-              <div className="text-sm font-semibold text-primary">{t("appName")}</div>
-              <div className="truncate text-xs text-muted">{t("landingSubtitle")}</div>
+              <div className="flex min-w-0 items-center gap-2">
+                <span className="truncate text-xs text-muted">{t("landingSubtitle")}</span>
+                <span className="rounded border border-signal/30 bg-signal/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-signal">
+                  v1.0-rc
+                </span>
+              </div>
             </div>
           </div>
 
@@ -133,9 +145,9 @@ export function HomeClient() {
               <div className="bg-app p-4 font-mono leading-6 text-secondary">
                 <div className="mb-3 flex items-center gap-2 border-b border-border pb-3 text-muted">
                   <Code2 className="h-4 w-4 text-signal" />
-                  src/codepact/engine.py
+                  src/exerpt/engine.py
                 </div>
-                <pre className="whitespace-pre-wrap">{`class CodepactEngine:
+                <pre className="whitespace-pre-wrap">{`class ExerptEngine:
     def build_prompt(self, files, task):
         graph = DependencyGraph.from_files(files)
         ranked = rank_for_task(graph, task)
@@ -161,8 +173,20 @@ export function HomeClient() {
           </div>
         </div>
 
-        <footer className="border-t border-border py-4 text-xs text-muted">{t("landingFooter")}</footer>
+        <footer className="flex items-center justify-between gap-4 border-t border-border py-4 text-xs text-muted">
+          <Logo iconClassName="h-5 w-5" wordmarkClassName="font-mono text-xs font-semibold tracking-normal" />
+          <span className="text-right">{t("landingFooter")}</span>
+        </footer>
       </section>
+    </main>
+  );
+}
+
+function WorkspaceLoading() {
+  const { t } = useI18n();
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-app text-sm text-muted">
+      {t("loadingWorkspace")}
     </main>
   );
 }

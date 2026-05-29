@@ -86,9 +86,9 @@ function CopyableCodeBlock({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="codepact-code-block my-4 overflow-hidden rounded-md border border-border bg-[rgb(var(--cp-code))] shadow-sm">
+    <div className="exerpt-code-block my-4 overflow-hidden rounded-md border border-border bg-[rgb(var(--cp-code))] shadow-sm">
       <div className="flex min-h-9 items-center justify-between border-b border-border bg-panel-strong px-3">
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">Code</span>
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">{t("code")}</span>
         <button
           type="button"
           onClick={copyBlock}

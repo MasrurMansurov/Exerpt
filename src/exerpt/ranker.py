@@ -9,7 +9,7 @@ from typing import cast
 
 import networkx as nx  # type: ignore[import-untyped]
 
-from codepact.language import (
+from exerpt.language import (
     FileCategory,
     detect_language,
     file_category,
@@ -17,7 +17,7 @@ from codepact.language import (
     is_config_exception,
     is_source_code,
 )
-from codepact.models import Priority, RankedFile, SourceFile
+from exerpt.models import Priority, RankReason, RankedFile, ReasonMetadata, SourceFile
 
 
 class SmartRanker:
@@ -84,7 +84,7 @@ class SmartRanker:
                 boilerplate_penalty,
                 config_limited,
             )
-            reason = self._reason_for(
+            reason_codes = self._reason_codes_for(
                 source,
                 task_terms,
                 score,
@@ -98,7 +98,8 @@ class SmartRanker:
                 RankedFile(
                     source=source,
                     priority=priority,
-                    reason=reason,
+                    reason=self._reason_text(reason_codes),
+                    reason_codes=reason_codes,
                     lexical_score=score,
                     graph_distance=distance,
                     importance_score=final_score,
@@ -207,7 +208,7 @@ class SmartRanker:
             return Priority.MEDIUM
         return Priority.LOW
 
-    def _reason_for(
+    def _reason_codes_for(
         self,
         source: SourceFile,
         task_terms: set[str],
@@ -217,28 +218,139 @@ class SmartRanker:
         final_score: float,
         boilerplate_penalty: bool,
         config_limited: bool,
-    ) -> str:
-        parts: list[str] = []
+    ) -> list[RankReason]:
+        reasons: list[RankReason] = []
         if lexical_score > 0:
-            parts.append(f"task keyword match ({lexical_score})")
+            reasons.append(
+                self._reason(
+                    "TASK_MATCH",
+                    min(1.0, log1p(lexical_score) / 3),
+                    "Task keyword match",
+                    matches=lexical_score,
+                )
+            )
         if centrality >= 0.25:
-            parts.append(f"inbound centrality {centrality:.2f}")
+            reasons.append(
+                self._reason(
+                    "CORE_ARCH",
+                    min(1.0, centrality),
+                    "Imported by multiple local files",
+                    centrality=round(centrality, 3),
+                )
+            )
         if graph_distance is not None:
-            parts.append(f"dependency graph distance {graph_distance}")
+            reasons.append(
+                self._reason(
+                    "GRAPH_DISTANCE",
+                    self._distance_decay(graph_distance),
+                    "Near a task-matching file in the dependency graph",
+                    distance=graph_distance,
+                )
+            )
         if is_android_source_path(source.relative_path):
-            parts.append("Android source boost")
+            reasons.append(
+                self._reason(
+                    "ANDROID_SOURCE",
+                    0.45,
+                    "Android source-set file",
+                )
+            )
         elif is_source_code(source.relative_path):
-            parts.append("source file boost")
+            reasons.append(
+                self._reason(
+                    "SOURCE_FILE",
+                    0.05,
+                    "Source code file",
+                )
+            )
+        if self._is_entrypoint(source):
+            reasons.append(
+                self._reason(
+                    "ENTRY_POINT",
+                    0.2,
+                    "Likely application entry point",
+                )
+            )
         if is_config_exception(source.relative_path, task_terms):
-            parts.append("task-relevant config")
+            reasons.append(
+                self._reason(
+                    "CONFIG_MATCH",
+                    0.2,
+                    "Config/data file is relevant to this task",
+                )
+            )
         if boilerplate_penalty:
-            parts.append("boilerplate penalty")
+            reasons.append(
+                self._reason(
+                    "BOILERPLATE_PENALTY",
+                    -0.65,
+                    "Boilerplate file without direct task match",
+                )
+            )
         if config_limited:
-            parts.append("config/data priority cap")
+            reasons.append(
+                self._reason(
+                    "CONFIG_PRIORITY_CAP",
+                    -0.45,
+                    "Config/data file priority was capped",
+                )
+            )
 
-        if not parts:
-            parts.append("background context")
-        parts.append(f"score {final_score:.2f}")
+        if not reasons:
+            reasons.append(
+                self._reason(
+                    "BACKGROUND_CONTEXT",
+                    0.1,
+                    "Background context",
+                )
+            )
+        reasons.append(
+            self._reason(
+                "FINAL_SCORE",
+                final_score,
+                "Final importance score",
+                final_score=round(final_score, 2),
+            )
+        )
+        return reasons
+
+    def _reason(self, code: str, score: float, explanation: str, **metadata: object) -> RankReason:
+        typed_metadata: ReasonMetadata = {}
+        for key, value in metadata.items():
+            if isinstance(value, str | int | float | bool) or value is None:
+                typed_metadata[key] = value
+        return RankReason(
+            code=code,
+            score=round(score, 3),
+            explanation=explanation,
+            metadata=typed_metadata,
+        )
+
+    def _reason_text(self, reasons: list[RankReason]) -> str:
+        parts: list[str] = []
+        for reason in reasons:
+            if reason.code == "TASK_MATCH":
+                parts.append(f"task keyword match ({reason.metadata.get('matches', 0)})")
+            elif reason.code == "CORE_ARCH":
+                parts.append(f"inbound centrality {reason.metadata.get('centrality', 0):.2f}")
+            elif reason.code == "GRAPH_DISTANCE":
+                parts.append(f"dependency graph distance {reason.metadata.get('distance', 'n/a')}")
+            elif reason.code == "ANDROID_SOURCE":
+                parts.append("Android source boost")
+            elif reason.code == "SOURCE_FILE":
+                parts.append("source file boost")
+            elif reason.code == "ENTRY_POINT":
+                parts.append("entry-point boost")
+            elif reason.code == "CONFIG_MATCH":
+                parts.append("task-relevant config")
+            elif reason.code == "BOILERPLATE_PENALTY":
+                parts.append("boilerplate penalty")
+            elif reason.code == "CONFIG_PRIORITY_CAP":
+                parts.append("config/data priority cap")
+            elif reason.code == "BACKGROUND_CONTEXT":
+                parts.append("background context")
+            elif reason.code == "FINAL_SCORE":
+                parts.append(f"score {reason.metadata.get('final_score', reason.score):.2f}")
         return "; ".join(parts)
 
     def _file_role_boost(self, source: SourceFile, task_terms: set[str]) -> float:

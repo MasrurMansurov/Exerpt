@@ -1,4 +1,4 @@
-"""Command line interface for Codepact."""
+"""Command line interface for Exerpt."""
 
 from __future__ import annotations
 
@@ -10,12 +10,13 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from codepact.engine import CodepactEngine
-from codepact.models import BuildOptions, TokenBudgetExceeded
+from exerpt.engine import ExerptEngine
+from exerpt.i18n import translate
+from exerpt.models import BuildOptions, TokenBudgetExceeded
 
 app = typer.Typer(
-    name="codepact",
-    help="Sift a codebase into a compact, task-oriented Markdown prompt.",
+    name="exerpt",
+    help="Sift a codebase into a focused, task-oriented Markdown prompt.",
     no_args_is_help=True,
 )
 console = Console()
@@ -38,6 +39,13 @@ def parse_token_limit(value: str) -> int:
     return amount * multiplier
 
 
+def format_token_limit(token_limit: int) -> str:
+    """Format token limits consistently with generated output messages."""
+    if token_limit >= 1000 and token_limit % 1000 == 0:
+        return f"{token_limit // 1000}k"
+    return f"{token_limit:,} tokens"
+
+
 @app.command()
 def build(
     task: Annotated[
@@ -51,7 +59,7 @@ def build(
     output: Annotated[
         Path,
         typer.Option("--output", "-o", help="Markdown file to write."),
-    ] = Path("codepact.md"),
+    ] = Path("exerpt.md"),
     root: Annotated[
         Path,
         typer.Option("--root", "-r", help="Repository root to scan."),
@@ -79,22 +87,27 @@ def build(
         include_tests=include_tests,
     )
 
-    engine = CodepactEngine()
+    engine = ExerptEngine()
 
     try:
         with console.status("[bold]Sifting project context...[/bold]"):
             result = engine.build_prompt(options)
     except TokenBudgetExceeded as exc:
-        console.print(f"[red]Token budget exceeded:[/red] {exc}")
+        detail = translate(
+            options.locale,
+            "token_limit_reached",
+            limit=format_token_limit(token_limit),
+        )
+        console.print(f"[red]{detail}[/red]")
         raise typer.Exit(code=2) from exc
     except Exception as exc:
-        console.print(f"[red]Codepact failed:[/red] {exc}")
+        console.print(f"[red]Exerpt failed:[/red] {exc}")
         raise typer.Exit(code=1) from exc
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(result.markdown, encoding="utf-8")
 
-    table = Table(title="Codepact Output")
+    table = Table(title="Exerpt Output")
     table.add_column("Metric", style="bold")
     table.add_column("Value")
     table.add_row("Output", str(output_path))

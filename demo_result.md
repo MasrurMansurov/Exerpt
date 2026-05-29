@@ -1,6 +1,6 @@
 <!-- Token note: generated with a local fallback tokenizer because tiktoken encoding cache was unavailable in this environment. -->
 
-# Codepact Context
+# Exerpt Context
 
 ## Table of Contents
 
@@ -15,16 +15,16 @@
 
 | Priority | File | Reason | Graph Distance | Local Dependencies |
 | --- | --- | --- | --- | --- |
-| HIGH | `codepact/ranker.py` | task keyword match (21) | 0 | `codepact/models.py` |
-| HIGH | `codepact/engine.py` | task keyword match (19) | 0 | `codepact/graph.py`, `codepact/models.py`, `codepact/ranker.py`, `codepact/renderer.py`, `codepact/scanner.py`, `codepact/tokenizer.py` |
-| HIGH | `codepact/renderer.py` | task keyword match (17) | 0 | `codepact/models.py`, `codepact/sifter.py` |
-| HIGH | `codepact/graph.py` | task keyword match (14) | 0 | `codepact/models.py` |
-| HIGH | `codepact/models.py` | task keyword match (2) | 0 | none |
-| HIGH | `codepact/cli.py` | dependency graph distance 1 | 1 | `codepact/engine.py`, `codepact/models.py` |
-| HIGH | `codepact/scanner.py` | dependency graph distance 1 | 1 | `codepact/models.py` |
-| HIGH | `codepact/sifter.py` | dependency graph distance 1 | 1 | `codepact/models.py` |
-| HIGH | `codepact/tokenizer.py` | dependency graph distance 1 | 1 | none |
-| LOW | `codepact/__init__.py` | background context | n/a | none |
+| HIGH | `exerpt/ranker.py` | task keyword match (21) | 0 | `exerpt/models.py` |
+| HIGH | `exerpt/engine.py` | task keyword match (19) | 0 | `exerpt/graph.py`, `exerpt/models.py`, `exerpt/ranker.py`, `exerpt/renderer.py`, `exerpt/scanner.py`, `exerpt/tokenizer.py` |
+| HIGH | `exerpt/renderer.py` | task keyword match (17) | 0 | `exerpt/models.py`, `exerpt/sifter.py` |
+| HIGH | `exerpt/graph.py` | task keyword match (14) | 0 | `exerpt/models.py` |
+| HIGH | `exerpt/models.py` | task keyword match (2) | 0 | none |
+| HIGH | `exerpt/cli.py` | dependency graph distance 1 | 1 | `exerpt/engine.py`, `exerpt/models.py` |
+| HIGH | `exerpt/scanner.py` | dependency graph distance 1 | 1 | `exerpt/models.py` |
+| HIGH | `exerpt/sifter.py` | dependency graph distance 1 | 1 | `exerpt/models.py` |
+| HIGH | `exerpt/tokenizer.py` | dependency graph distance 1 | 1 | none |
+| LOW | `exerpt/__init__.py` | background context | n/a | none |
 
 ---
 
@@ -43,11 +43,11 @@
 
 ### HIGH Priority
 
-#### `codepact/ranker.py`
+#### `exerpt/ranker.py`
 
 - Reason: task keyword match (21)
 - Graph distance: 0
-- Summary: ranker; imports __future__, codepact.models, networkx
+- Summary: ranker; imports __future__, exerpt.models, networkx
 
 ```python
 """Graph-aware task relevance ranking."""
@@ -56,7 +56,7 @@ import re
 from pathlib import Path
 from typing import cast
 import networkx as nx
-from codepact.models import Priority, RankedFile, SourceFile
+from exerpt.models import Priority, RankedFile, SourceFile
 class SmartRanker:
     """Assign file priority using task keywords and graph distance."""
     stop_words = {
@@ -164,31 +164,31 @@ class SmartRanker:
 
 ---
 
-#### `codepact/engine.py`
+#### `exerpt/engine.py`
 
 - Reason: task keyword match (19)
 - Graph distance: 0
-- Summary: engine; imports __future__, codepact.graph, codepact.models
+- Summary: engine; imports __future__, exerpt.graph, exerpt.models
 
 ```python
-"""Core Codepact orchestration engine."""
+"""Core Exerpt orchestration engine."""
 from __future__ import annotations
 from collections import Counter
 import networkx as nx
-from codepact.graph import DependencyAnalyzer
-from codepact.models import (
+from exerpt.graph import DependencyAnalyzer
+from exerpt.models import (
     BuildOptions,
     BuildResult,
     RankedFile,
     RenderProfile,
     TokenBudgetExceeded,
 )
-from codepact.ranker import SmartRanker
-from codepact.renderer import MarkdownRenderer
-from codepact.scanner import ProjectScanner
-from codepact.tokenizer import TokenCounter
-class CodepactEngine:
-    """Build a compact, task-oriented LLM context from a repository."""
+from exerpt.ranker import SmartRanker
+from exerpt.renderer import MarkdownRenderer
+from exerpt.scanner import ProjectScanner
+from exerpt.tokenizer import TokenCounter
+class ExerptEngine:
+    """Build a focused, task-oriented LLM context from a repository."""
     def __init__(
         self,
         *,
@@ -243,19 +243,19 @@ class CodepactEngine:
 
 ---
 
-#### `codepact/renderer.py`
+#### `exerpt/renderer.py`
 
 - Reason: task keyword match (17)
 - Graph distance: 0
-- Summary: renderer; imports __future__, codepact.models, codepact.sifter
+- Summary: renderer; imports __future__, exerpt.models, exerpt.sifter
 
 ```python
 """Markdown prompt renderer."""
 from __future__ import annotations
 from pathlib import Path
 import networkx as nx
-from codepact.models import BuildOptions, Priority, RankedFile, RenderProfile
-from codepact.sifter import CodeSifter
+from exerpt.models import BuildOptions, Priority, RankedFile, RenderProfile
+from exerpt.sifter import CodeSifter
 class MarkdownRenderer:
     """Render ranked files into a structured LLM prompt."""
     def __init__(self, sifter: CodeSifter | None = None) -> None:
@@ -268,7 +268,7 @@ class MarkdownRenderer:
         profile: RenderProfile,
     ) -> str:
         lines: list[str] = [
-            "# Codepact Context",
+            "# Exerpt Context",
             "",
             "## Table of Contents",
             "",
@@ -419,11 +419,11 @@ class MarkdownRenderer:
 
 ---
 
-#### `codepact/graph.py`
+#### `exerpt/graph.py`
 
 - Reason: task keyword match (14)
 - Graph distance: 0
-- Summary: graph; imports __future__, ast, codepact.models
+- Summary: graph; imports __future__, ast, exerpt.models
 
 ```python
 """Dependency extraction and graph construction."""
@@ -432,7 +432,7 @@ import ast
 import re
 from pathlib import Path
 import networkx as nx
-from codepact.models import SourceFile
+from exerpt.models import SourceFile
 class DependencyAnalyzer:
     """Build a directed local dependency graph from Python and JS/TS imports."""
     source_extensions = {
@@ -564,14 +564,14 @@ class DependencyAnalyzer:
 
 ---
 
-#### `codepact/models.py`
+#### `exerpt/models.py`
 
 - Reason: task keyword match (2)
 - Graph distance: 0
 - Summary: models; imports __future__, dataclasses, enum
 
 ```python
-"""Shared domain models for Codepact."""
+"""Shared domain models for Exerpt."""
 from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
@@ -624,14 +624,14 @@ class BuildResult:
 
 ---
 
-#### `codepact/cli.py`
+#### `exerpt/cli.py`
 
 - Reason: dependency graph distance 1
 - Graph distance: 1
-- Summary: cli; imports __future__, codepact.engine, codepact.models
+- Summary: cli; imports __future__, exerpt.engine, exerpt.models
 
 ```python
-"""Command line interface for Codepact."""
+"""Command line interface for Exerpt."""
 from __future__ import annotations
 import re
 from pathlib import Path
@@ -639,11 +639,11 @@ from typing import Annotated
 import typer
 from rich.console import Console
 from rich.table import Table
-from codepact.engine import CodepactEngine
-from codepact.models import BuildOptions, TokenBudgetExceeded
+from exerpt.engine import ExerptEngine
+from exerpt.models import BuildOptions, TokenBudgetExceeded
 app = typer.Typer(
-    name="codepact",
-    help="Sift a codebase into a compact, task-oriented Markdown prompt.",
+    name="exerpt",
+    help="Sift a codebase into a focused, task-oriented Markdown prompt.",
     no_args_is_help=True,
 )
 console = Console()
@@ -672,7 +672,7 @@ def build(
     output: Annotated[
         Path,
         typer.Option("--output", "-o", help="Markdown file to write."),
-    ] = Path("codepact.md"),
+    ] = Path("exerpt.md"),
     root: Annotated[
         Path,
         typer.Option("--root", "-r", help="Repository root to scan."),
@@ -698,7 +698,7 @@ def build(
         model=model,
         include_tests=include_tests,
     )
-    engine = CodepactEngine()
+    engine = ExerptEngine()
     try:
         with console.status("[bold]Sifting project context...[/bold]"):
             result = engine.build_prompt(options)
@@ -706,11 +706,11 @@ def build(
         console.print(f"[red]Token budget exceeded:[/red] {exc}")
         raise typer.Exit(code=2) from exc
     except Exception as exc:
-        console.print(f"[red]Codepact failed:[/red] {exc}")
+        console.print(f"[red]Exerpt failed:[/red] {exc}")
         raise typer.Exit(code=1) from exc
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(result.markdown, encoding="utf-8")
-    table = Table(title="Codepact Output")
+    table = Table(title="Exerpt Output")
     table.add_column("Metric", style="bold")
     table.add_column("Value")
     table.add_row("Output", str(output_path))
@@ -729,11 +729,11 @@ if __name__ == "__main__":
 
 ---
 
-#### `codepact/scanner.py`
+#### `exerpt/scanner.py`
 
 - Reason: dependency graph distance 1
 - Graph distance: 1
-- Summary: scanner; imports __future__, charset_normalizer, codepact.models
+- Summary: scanner; imports __future__, charset_normalizer, exerpt.models
 
 ```python
 """Gitignore-aware project scanner."""
@@ -741,7 +741,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 from pathspec import PathSpec
-from codepact.models import SourceFile
+from exerpt.models import SourceFile
 class ProjectScanner:
     """Read text files from a project while respecting ignore rules."""
     ignored_dirs = {
@@ -892,11 +892,11 @@ class ProjectScanner:
 
 ---
 
-#### `codepact/sifter.py`
+#### `exerpt/sifter.py`
 
 - Reason: dependency graph distance 1
 - Graph distance: 1
-- Summary: sifter; imports __future__, ast, codepact.models
+- Summary: sifter; imports __future__, ast, exerpt.models
 
 ```python
 """Code compression strategies."""
@@ -907,7 +907,7 @@ import re
 import tokenize
 from pathlib import Path
 from typing import Any
-from codepact.models import Priority, SourceFile
+from exerpt.models import Priority, SourceFile
 class CodeSifter:
     """Compress files according to their assigned priority."""
     language_by_extension = {
@@ -1136,7 +1136,7 @@ class CodeSifter:
 
 ---
 
-#### `codepact/tokenizer.py`
+#### `exerpt/tokenizer.py`
 
 - Reason: dependency graph distance 1
 - Graph distance: 1
@@ -1165,7 +1165,7 @@ class TokenCounter:
 
 ### LOW Priority
 
-#### `codepact/__init__.py`
+#### `exerpt/__init__.py`
 
 - Reason: background context
 - Graph distance: n/a

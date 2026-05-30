@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "cd webapp && npm run build",
-    "dev": "cd webapp && npm run dev",
-    "lint": "cd webapp && npm run lint",
-    "start": "cd webapp && npm run start"
+    "build": "npm --prefix webapp run build",
+    "dev": "npm --prefix webapp run dev --",
+    "lint": "npm --prefix webapp run lint",
+    "start": "npm --prefix webapp run start"
   },
   "dependencies": {
     "next": "^15.1.0"

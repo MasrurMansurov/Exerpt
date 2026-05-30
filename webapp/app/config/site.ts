@@ -3,6 +3,6 @@ export const siteUrl = (
 ).replace(/\/$/, "");
 
 export const siteName = "Exerpt";
-export const siteDescription = "Precision Context Engineering for LLMs.";
+export const siteDescription = "Exerpt uses dependency graphs to sift massive repos into perfect 8k context.";
 export const aboutDescription =
-  "Exerpt sifts through your codebase to extract the architectural essence, fitting massive repos into tight token limits.";
+  "Exerpt uses dependency graphs to sift massive repos into perfect 8k context.";

@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 
 from exerpt.api import app
 from exerpt.i18n import translate
+from exerpt.job_store import SQLiteJobStore
 
 
 class FakeEncoding:
@@ -177,3 +178,70 @@ def test_jobs_endpoint_completes_with_result_artifact(monkeypatch):
         events_response = client.get(f"/jobs/{job_id}/events")
         assert events_response.status_code == 200
         assert "event: result" in events_response.text
+
+
+def test_sqlite_job_store_persists_job_snapshots(tmp_path):
+    db_path = tmp_path / "jobs.sqlite3"
+    first_store = SQLiteJobStore(db_path)
+    first_store.initialize()
+    first_store.create("job-1")
+    first_store.update(
+        "job-1",
+        status="completed",
+        progress=100,
+        message="Complete",
+        message_code="jobComplete",
+        result={
+            "markdown": "# Exerpt Context",
+            "tokens": 12,
+            "files_scanned": 1,
+            "priority_counts": {"high": 1},
+            "graph": {"nodes": [], "edges": []},
+        },
+    )
+
+    second_store = SQLiteJobStore(db_path)
+    persisted_job = second_store.get("job-1")
+
+    assert persisted_job is not None
+    assert persisted_job.status == "completed"
+    assert persisted_job.progress == 100
+    assert persisted_job.result is not None
+    assert persisted_job.result["markdown"] == "# Exerpt Context"
+
+
+def test_sqlite_job_store_marks_interrupted_jobs_failed(tmp_path):
+    db_path = tmp_path / "jobs.sqlite3"
+    first_store = SQLiteJobStore(db_path)
+    first_store.create("job-1")
+    first_store.update(
+        "job-1",
+        status="running",
+        progress=40,
+        message="Building dependency graph...",
+        message_code="jobBuildingGraph",
+    )
+
+    second_store = SQLiteJobStore(db_path)
+    second_store.initialize(mark_active_failed=True)
+    interrupted_job = second_store.get("job-1")
+
+    assert interrupted_job is not None
+    assert interrupted_job.status == "failed"
+    assert interrupted_job.message_code == "jobFailed"
+    assert interrupted_job.error == "Server restarted before this job completed."
+
+
+def test_sqlite_job_store_fails_stale_jobs(tmp_path):
+    db_path = tmp_path / "jobs.sqlite3"
+    store = SQLiteJobStore(db_path)
+    store.create("job-1")
+
+    assert store.fail_stale_jobs(stale_after_seconds=0.01) == 0
+    time.sleep(0.02)
+    assert store.fail_stale_jobs(stale_after_seconds=0.01) == 1
+
+    stale_job = store.get("job-1")
+    assert stale_job is not None
+    assert stale_job.status == "failed"
+    assert stale_job.error == "Job stopped before it completed. Please run it again."

@@ -1,0 +1,10 @@
+<svg width="320" height="96" viewBox="0 0 320 96" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title">
+  <title id="title">Exerpt</title>
+  <text x="4" y="68" fill="#E5FFF3" font-family="Space Grotesk, Inter, Arial, sans-serif" font-size="68" font-weight="700">E</text>
+  <g transform="translate(62 22) scale(2.16)" stroke="#B0E4CC" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.25" fill="#091413">
+    <path d="M5 5.75 19 18.25"/>
+    <path d="M19 5.75 5 18.25"/>
+    <circle cx="12" cy="12" r="1.65"/>
+  </g>
+  <text x="110" y="68" fill="#E5FFF3" font-family="Space Grotesk, Inter, Arial, sans-serif" font-size="68" font-weight="700">erpt</text>
+</svg>

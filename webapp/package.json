@@ -8,7 +8,7 @@
     "build": "next build",
     "build:wasm": "NEXT_TEST_WASM=1 NEXT_TEST_WASM_DIR=$PWD/node_modules/@next/swc-wasm-nodejs next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "eslint . --max-warnings=0"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",

@@ -19,14 +19,22 @@ import type {
 import { demoProject } from "../components/workspace/demo-project";
 import { loadWorkspaceSnapshot, saveWorkspaceSnapshot } from "../components/workspace-persistence";
 
-export const API_BASE_URL = (
-  process.env.NEXT_PUBLIC_API_URL ??
-  process.env.NEXT_PUBLIC_EXERPT_API_URL ??
-  process.env.NEXT_PUBLIC_CODEPACT_API_URL ??
-  "http://127.0.0.1:8000"
-).replace(/\/$/, "");
+export const API_BASE_URL = resolveApiBaseUrl();
 
 const SSE_WATCHDOG_MS = 4000;
+
+function resolveApiBaseUrl() {
+  const configuredUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
+  if (configuredUrl) {
+    return configuredUrl.replace(/\/$/, "");
+  }
+
+  if (typeof window !== "undefined" && window.location.origin) {
+    return window.location.origin.replace(/\/$/, "");
+  }
+
+  return "";
+}
 
 export function useWorkspaceState() {
   const { language, localeOptions, setLanguage, t } = useI18n();
@@ -296,7 +304,7 @@ export function useWorkspaceState() {
     setError("");
     setCopied(false);
     setActiveResultTab("preview");
-    setProgressMessage(t("jobQueued"));
+    setProgressMessage(t("jobSubmitting"));
     setProgressPercent(0);
 
     try {
@@ -318,7 +326,7 @@ export function useWorkspaceState() {
 
       const payload = await readJsonResponse(response);
       if (!response.ok) {
-        throw new Error(payload.detail ?? t("apiRequestFailed"));
+        throw new Error(payload.detail ?? payload.error ?? t("apiRequestFailed"));
       }
 
       setBackendStatus("online");
@@ -425,7 +433,7 @@ export function useWorkspaceState() {
       const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`, { cache: "no-store" });
       const payload = await readJsonResponse(response);
       if (!response.ok) {
-        throw new Error(payload.detail ?? t("apiRequestFailed"));
+        throw new Error(payload.detail ?? payload.error ?? t("apiRequestFailed"));
       }
 
       const job = payload as JobResponse;
@@ -591,6 +599,9 @@ async function readJsonResponse(response: Response): Promise<ApiResponsePayload>
   try {
     return JSON.parse(text) as ApiResponsePayload;
   } catch {
+    if (!response.ok && /<html|<!doctype/i.test(text)) {
+      return { detail: `${response.status} ${response.statusText || "API route error"}` };
+    }
     return { detail: text };
   }
 }
@@ -613,6 +624,8 @@ function jobMessageFor(
   t: ReturnType<typeof useI18n>["t"]
 ) {
   switch (messageCode) {
+    case "jobSubmitting":
+      return t("jobSubmitting");
     case "jobQueued":
       return t("jobQueued");
     case "jobScanning":

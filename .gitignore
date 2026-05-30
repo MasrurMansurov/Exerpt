@@ -13,6 +13,7 @@ dist/
 *.egg-info/
 
 codepact.md
+.exerpt/
 
 node_modules/
 .next/

@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server";
-import { sendFeedbackToDiscord } from "../../lib/discord";
+import { hasDiscordFeedbackWebhook, sendFeedbackToDiscord } from "../../lib/discord";
 
 type FeedbackBody = {
   type?: "positive" | "negative";
   message?: string;
   metadata?: Record<string, string | number | boolean | null | undefined>;
 };
+
+export async function GET() {
+  return NextResponse.json({ configured: hasDiscordFeedbackWebhook() });
+}
 
 export async function POST(request: Request) {
   let body: FeedbackBody;
@@ -22,6 +26,10 @@ export async function POST(request: Request) {
   const message = typeof body.message === "string" ? body.message.trim() : "";
   if (!message) {
     return NextResponse.json({ error: "Feedback message is required" }, { status: 400 });
+  }
+
+  if (!hasDiscordFeedbackWebhook()) {
+    return NextResponse.json({ error: "Feedback channel is not configured." }, { status: 503 });
   }
 
   try {

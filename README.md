@@ -1,12 +1,16 @@
-# **Exerpt**
+<h1 align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/exerpt-wordmark-dark.svg">
+    <img src="docs/assets/exerpt-wordmark-light.svg" alt="Exerpt" width="240">
+  </picture>
+</h1>
 
-**Precision Context Engineering for LLMs.**
+**Stop feeding your LLM garbage context.**
 
 Stop feeding your LLM garbage context. Exerpt is a Context-Aware Sifting Engine
 for real codebases.
 
-Exerpt sifts through your codebase to extract the architectural essence, fitting
-massive repos into tight token limits.
+Exerpt uses dependency graphs to sift massive repos into perfect 8k context.
 
 Less junk. Fewer tokens. Better answers.
 
@@ -94,8 +98,14 @@ http://localhost:3000
 If the API lives somewhere else:
 
 ```bash
-NEXT_PUBLIC_EXERPT_API_URL=http://localhost:8000 npm run dev
+EXERPT_API_URL=http://localhost:8000 npm run dev
 ```
+
+The web app calls the API through same-origin routes (`/health`, `/jobs`,
+`/sift`) so production users do not accidentally call their own localhost.
+Use `EXERPT_API_URL` on the Next.js server for the preferred proxy path, or
+`NEXT_PUBLIC_API_URL` only when the browser should call a separate public API
+origin directly.
 
 ## CLI
 

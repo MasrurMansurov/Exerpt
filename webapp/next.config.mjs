@@ -1,3 +1,5 @@
+const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   async redirects() {
@@ -11,16 +13,7 @@ const nextConfig = {
     ];
   },
   env: {
-    NEXT_PUBLIC_API_URL:
-      process.env.NEXT_PUBLIC_API_URL ??
-      process.env.NEXT_PUBLIC_EXERPT_API_URL ??
-      process.env.NEXT_PUBLIC_CODEPACT_API_URL ??
-      "http://127.0.0.1:8000",
-    NEXT_PUBLIC_EXERPT_API_URL:
-      process.env.NEXT_PUBLIC_EXERPT_API_URL ??
-      process.env.NEXT_PUBLIC_API_URL ??
-      process.env.NEXT_PUBLIC_CODEPACT_API_URL ??
-      "http://127.0.0.1:8000",
+    ...(apiUrl ? { NEXT_PUBLIC_API_URL: apiUrl } : {}),
     NEXT_PUBLIC_BASE_URL:
       process.env.NEXT_PUBLIC_BASE_URL ??
       process.env.NEXT_PUBLIC_EXERPT_SITE_URL ??

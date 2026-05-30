@@ -2,12 +2,14 @@
   "name": "exerpt",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "webapp"
+  ],
   "scripts": {
-    "build": "npm --prefix webapp run build",
-    "dev": "npm --prefix webapp run dev --",
-    "lint": "npm --prefix webapp run lint",
-    "start": "npm --prefix webapp run start",
-    "vercel-build": "npm --prefix webapp ci && npm --prefix webapp run build"
+    "build": "npm --workspace exerpt-webapp run build",
+    "dev": "npm --workspace exerpt-webapp run dev --",
+    "lint": "npm --workspace exerpt-webapp run lint",
+    "start": "npm --workspace exerpt-webapp run start"
   },
   "dependencies": {
     "next": "^15.1.0"

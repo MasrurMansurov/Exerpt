@@ -1,0 +1,14 @@
+{
+  "name": "exerpt",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "cd webapp && npm run build",
+    "dev": "cd webapp && npm run dev",
+    "lint": "cd webapp && npm run lint",
+    "start": "cd webapp && npm run start"
+  },
+  "dependencies": {
+    "next": "^15.1.0"
+  }
+}

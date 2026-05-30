@@ -6,7 +6,8 @@
     "build": "npm --prefix webapp run build",
     "dev": "npm --prefix webapp run dev --",
     "lint": "npm --prefix webapp run lint",
-    "start": "npm --prefix webapp run start"
+    "start": "npm --prefix webapp run start",
+    "vercel-build": "npm --prefix webapp ci && npm --prefix webapp run build"
   },
   "dependencies": {
     "next": "^15.1.0"

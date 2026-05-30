@@ -149,6 +149,10 @@ select {
   text-underline-offset: 3px;
 }
 
+.markdown-body {
+  overflow-wrap: anywhere;
+}
+
 .markdown-body p,
 .markdown-body ul,
 .markdown-body ol {
@@ -248,4 +252,34 @@ select {
   inset: 0;
   position: absolute;
   transform: translateX(-100%);
+}
+
+.exerpt-wordmark {
+  align-items: baseline;
+  display: inline-flex;
+  font-family: "Space Grotesk", var(--cp-font-sans);
+  font-weight: 700;
+  gap: 0.02em;
+  letter-spacing: 0;
+  line-height: 1;
+  max-width: 100%;
+  overflow: visible;
+  text-rendering: geometricPrecision;
+  white-space: nowrap;
+}
+
+.exerpt-wordmark__x {
+  align-self: center;
+  color: rgb(var(--cp-signal));
+  display: inline-block;
+  fill: rgb(var(--cp-bg));
+  height: 0.76em;
+  margin: 0 0.015em;
+  overflow: visible;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.25;
+  transform: translateY(0.035em);
+  width: 0.76em;
 }

@@ -4,10 +4,9 @@ from __future__ import annotations
 
 import asyncio
 import json
-import time
 import uuid
 from collections.abc import AsyncIterator
-from dataclasses import dataclass, field
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
 
@@ -18,6 +17,7 @@ from pydantic import BaseModel, Field
 
 from exerpt.engine import ExerptEngine
 from exerpt.i18n import normalize_locale, translate
+from exerpt.job_store import JobRecord, SQLiteJobStore
 from exerpt.language import detect_language, is_ignored_project_path
 from exerpt.models import BuildOptions, SourceFile, TokenBudgetExceeded
 
@@ -108,21 +108,6 @@ class JobStatusResponse(JobCreateResponse):
     error: str | None = None
 
 
-@dataclass(slots=True)
-class SiftJob:
-    """In-memory job state for local asynchronous processing."""
-
-    id: str
-    status: str = "queued"
-    progress: int = 0
-    message: str = "Queued"
-    message_code: str = "jobQueued"
-    result: SiftResponse | None = None
-    error: str | None = None
-    created_at: float = field(default_factory=time.time)
-    updated_at: float = field(default_factory=time.time)
-
-
 class InMemoryScanner:
     """Scanner adapter that feeds submitted files into the normal engine."""
 
@@ -165,13 +150,22 @@ class InMemoryScanner:
         return deduped
 
 
-jobs: dict[str, SiftJob] = {}
-jobs_lock = asyncio.Lock()
+job_store = SQLiteJobStore()
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    """Prepare job persistence before accepting requests."""
+    job_store.initialize()
+    job_store.fail_stale_jobs()
+    yield
+
 
 app = FastAPI(
     title="Exerpt API",
-    description="Precision Context Engineering for LLMs.",
+    description="Dependency-graph context sifting for LLMs.",
     version="0.1.0",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -222,10 +216,7 @@ def sift(payload: SiftRequest) -> SiftResponse:
 async def create_job(payload: SiftRequest) -> JobCreateResponse:
     """Create an asynchronous sift job and return its tracking id."""
     job_id = uuid.uuid4().hex
-    job = SiftJob(id=job_id)
-
-    async with jobs_lock:
-        jobs[job_id] = job
+    job = job_store.create(job_id)
 
     asyncio.create_task(run_sift_job(job_id, payload))
     return JobCreateResponse(
@@ -395,25 +386,21 @@ async def update_job(
     result: SiftResponse | None = None,
     error: str | None = None,
 ) -> None:
-    """Update job state in a single event-loop critical section."""
-    async with jobs_lock:
-        job = jobs.get(job_id)
-        if job is None:
-            return
-        job.status = status
-        job.progress = progress
-        job.message = message
-        job.message_code = message_code
-        job.updated_at = time.time()
-        if result is not None:
-            job.result = result
-        if error is not None:
-            job.error = error
+    """Update persisted job state."""
+    job_store.update(
+        job_id,
+        status=status,
+        progress=progress,
+        message=message,
+        message_code=message_code,
+        result=model_to_data(result) if result is not None else None,
+        error=error,
+    )
 
 
-async def ensure_job(job_id: str) -> SiftJob:
-    async with jobs_lock:
-        job = jobs.get(job_id)
+async def ensure_job(job_id: str) -> JobRecord:
+    job_store.fail_stale_jobs()
+    job = job_store.get(job_id)
     if job is None:
         raise HTTPException(status_code=404, detail="Job not found")
     return job
@@ -427,9 +414,18 @@ async def job_snapshot(job_id: str) -> JobStatusResponse:
         progress=job.progress,
         message=job.message,
         message_code=job.message_code,
-        result=job.result,
+        result=sift_response_from_data(job.result),
         error=job.error,
     )
+
+
+def sift_response_from_data(data: dict[str, Any] | None) -> SiftResponse | None:
+    """Load a stored result payload across Pydantic v1/v2."""
+    if data is None:
+        return None
+    if hasattr(SiftResponse, "model_validate"):
+        return SiftResponse.model_validate(data)
+    return SiftResponse.parse_obj(data)
 
 
 def model_to_data(model: BaseModel) -> dict[str, Any]:

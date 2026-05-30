@@ -58,6 +58,7 @@ export type JobResponse = {
 
 export type ApiResponsePayload = Partial<SiftResponse> & Partial<JobResponse> & {
   detail?: string;
+  error?: string;
 };
 
 export type TreeNode = {

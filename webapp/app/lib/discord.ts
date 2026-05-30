@@ -2,6 +2,10 @@ type DiscordFeedbackType = "positive" | "negative";
 
 type DiscordFeedbackMetadata = Record<string, string | number | boolean | null | undefined>;
 
+export function hasDiscordFeedbackWebhook() {
+  return Boolean(process.env.EXERPT_DISCORD_WEBHOOK_URL);
+}
+
 export async function sendFeedbackToDiscord(
   type: DiscordFeedbackType,
   message: string,
@@ -9,7 +13,7 @@ export async function sendFeedbackToDiscord(
 ) {
   const webhookUrl = process.env.EXERPT_DISCORD_WEBHOOK_URL;
   if (!webhookUrl) {
-    return { sent: false, reason: "missing_webhook" };
+    throw new Error("Feedback channel is not configured.");
   }
 
   const color = type === "positive" ? 0x408a71 : 0xb0e4cc;

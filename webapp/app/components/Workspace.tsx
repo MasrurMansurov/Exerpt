@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useState } from "react";
 import { Check, Database, Globe2, Link2, Moon, PanelLeft, Server, Sun } from "lucide-react";
 import { useWorkspaceState, API_BASE_URL } from "../hooks/useWorkspaceState";
 import { Logo } from "./Logo";
@@ -9,6 +10,10 @@ import { ResultPanel } from "./workspace/ResultPanel";
 
 export function Workspace() {
   const workspace = useWorkspaceState();
+  const [isResultFocused, setIsResultFocused] = useState(false);
+  const toggleResultFocus = useCallback(() => {
+    setIsResultFocused((value) => !value);
+  }, []);
 
   return (
     <main className="h-screen overflow-hidden bg-app text-primary">
@@ -101,67 +106,89 @@ export function Workspace() {
           </div>
         </header>
 
-        <div
-          className="grid min-h-0 flex-1"
-          style={{
-            gridTemplateColumns: `${workspace.sidebarWidth}px 6px minmax(0, 1fr) minmax(22rem, clamp(22rem, 29vw, 32rem))`
-          }}
-        >
-          <Explorer
-            activeFile={workspace.selectedFile?.name ?? ""}
-            expandedFolders={workspace.expandedFolders}
-            fileTree={workspace.fileTree}
-            files={workspace.files}
-            onOpenFile={workspace.setActiveFile}
-            onReplaceProjectFiles={workspace.replaceProjectFiles}
-            onResetDemoProject={workspace.resetDemoProject}
-            onToggleFolder={workspace.toggleFolder}
-            projectName={workspace.projectName}
-            projectOrigin={workspace.projectOrigin}
-          />
-
-          <button
-            type="button"
-            onMouseDown={() => workspace.setIsResizingSidebar(true)}
-            className="group flex cursor-col-resize items-center justify-center border-x border-border bg-panel-strong transition hover:bg-cobalt/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cobalt"
-            aria-label={workspace.t("resizeExplorer")}
-            title={workspace.t("resizeExplorer")}
+        {isResultFocused ? (
+          <div className="min-h-0 flex-1">
+            <ResultPanel
+              activeTab={workspace.activeResultTab}
+              copied={workspace.copied}
+              error={workspace.error}
+              fullRawOutput={workspace.fullRawOutput}
+              graph={workspace.graph}
+              isFocused={isResultFocused}
+              markdown={workspace.result}
+              metrics={workspace.metrics}
+              onCopy={workspace.handleCopy}
+              onTabChange={workspace.setActiveResultTab}
+              onToggleFocus={toggleResultFocus}
+              originalFiles={workspace.resultFiles}
+              themeMode={workspace.themeMode}
+            />
+          </div>
+        ) : (
+          <div
+            className="grid min-h-0 flex-1"
+            style={{
+              gridTemplateColumns: `${workspace.sidebarWidth}px 6px minmax(0, 1fr) minmax(24rem, clamp(24rem, 34vw, 40rem))`
+            }}
           >
-            <PanelLeft className="h-3.5 w-3.5 text-muted opacity-0 transition group-hover:opacity-100" />
-          </button>
+            <Explorer
+              activeFile={workspace.selectedFile?.name ?? ""}
+              expandedFolders={workspace.expandedFolders}
+              fileTree={workspace.fileTree}
+              files={workspace.files}
+              onOpenFile={workspace.setActiveFile}
+              onReplaceProjectFiles={workspace.replaceProjectFiles}
+              onResetDemoProject={workspace.resetDemoProject}
+              onToggleFolder={workspace.toggleFolder}
+              projectName={workspace.projectName}
+              projectOrigin={workspace.projectOrigin}
+            />
 
-          <EditorPane
-            breadcrumbs={workspace.breadcrumbs}
-            canSubmit={workspace.canSubmit}
-            fileCount={workspace.files.length}
-            isLoading={workspace.isLoading}
-            limit={workspace.limit}
-            onChangeFile={workspace.updateActiveFile}
-            onLimitChange={workspace.setLimit}
-            onSift={() => void workspace.handleSift()}
-            onTaskChange={workspace.setTask}
-            progressMessage={workspace.progressMessage}
-            progressPercent={workspace.progressPercent}
-            projectName={workspace.projectName}
-            selectedFile={workspace.selectedFile}
-            task={workspace.task}
-            themeMode={workspace.themeMode}
-          />
+            <button
+              type="button"
+              onMouseDown={() => workspace.setIsResizingSidebar(true)}
+              className="group flex cursor-col-resize items-center justify-center border-x border-border bg-panel-strong transition hover:bg-cobalt/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cobalt"
+              aria-label={workspace.t("resizeExplorer")}
+              title={workspace.t("resizeExplorer")}
+            >
+              <PanelLeft className="h-3.5 w-3.5 text-muted opacity-0 transition group-hover:opacity-100" />
+            </button>
 
-          <ResultPanel
-            activeTab={workspace.activeResultTab}
-            copied={workspace.copied}
-            error={workspace.error}
-            fullRawOutput={workspace.fullRawOutput}
-            graph={workspace.graph}
-            markdown={workspace.result}
-            metrics={workspace.metrics}
-            onCopy={workspace.handleCopy}
-            onTabChange={workspace.setActiveResultTab}
-            originalFiles={workspace.resultFiles}
-            themeMode={workspace.themeMode}
-          />
-        </div>
+            <EditorPane
+              breadcrumbs={workspace.breadcrumbs}
+              canSubmit={workspace.canSubmit}
+              fileCount={workspace.files.length}
+              isLoading={workspace.isLoading}
+              limit={workspace.limit}
+              onChangeFile={workspace.updateActiveFile}
+              onLimitChange={workspace.setLimit}
+              onSift={() => void workspace.handleSift()}
+              onTaskChange={workspace.setTask}
+              progressMessage={workspace.progressMessage}
+              progressPercent={workspace.progressPercent}
+              projectName={workspace.projectName}
+              selectedFile={workspace.selectedFile}
+              task={workspace.task}
+              themeMode={workspace.themeMode}
+            />
+
+            <ResultPanel
+              activeTab={workspace.activeResultTab}
+              copied={workspace.copied}
+              error={workspace.error}
+              fullRawOutput={workspace.fullRawOutput}
+              graph={workspace.graph}
+              isFocused={isResultFocused}
+              markdown={workspace.result}
+              metrics={workspace.metrics}
+              onCopy={workspace.handleCopy}
+              onTabChange={workspace.setActiveResultTab}
+              onToggleFocus={toggleResultFocus}
+              originalFiles={workspace.resultFiles}
+              themeMode={workspace.themeMode}
+            />
+          </div>
+        )}
         {workspace.toastMessage ? (
           <div
             role="status"
